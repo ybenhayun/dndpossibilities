@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>D&D Character Counter</title>
+	<link rel="stylesheet" href="styles.css" />
+	<style>
+		.mathCell {
+			line-height: 1.35;
+			min-width: 360px;
+			width: 42%;
+		}
+
+		.sourceCell {
+			font-size: 13px;
+			line-height: 1.35;
+			min-width: 150px;
+		}
+
+		.sourceCell strong {
+			display: block;
+			font-size: 14px;
+		}
+
+		.cellLabel {
+			color: #7cc7ff;
+			display: block;
+			font-size: 11px;
+			font-weight: bold;
+			text-transform: uppercase;
+		}
+
+		.muted {
+			color: #aaa;
+			font-size: 12px;
+		}
+
+		.sourceLineList {
+			list-style: none;
+			margin: 2px 0 0;
+			padding: 0;
+		}
+
+		.sourceLineList li {
+			padding: 1px 0;
+		}
+
+		.fixedGroupList {
+			list-style: none;
+			margin: 2px 0 0;
+			padding: 0;
+		}
+
+		.fixedGroupList > li {
+			margin: 0 0 5px;
+		}
+
+		.fixedGroupLabel {
+			color: #d7d7d7;
+			font-size: 12px;
+			font-weight: bold;
+		}
+
+		.fixedItemList {
+			list-style: disc;
+			margin: 2px 0 0 18px;
+			padding: 0;
+		}
+
+		.fixedItemList li {
+			padding: 1px 0;
+		}
+
+		.mathLine,
+		.mathBlock {
+			background: #242424;
+			border: 1px solid #555;
+			border-radius: 6px;
+			margin: 0 0 8px;
+			padding: 8px;
+		}
+
+		.mathLine {
+			align-items: center;
+			display: flex;
+			gap: 10px;
+			justify-content: space-between;
+		}
+
+		.mathTitle {
+			color: #7cc7ff;
+			font-weight: bold;
+			margin-bottom: 6px;
+		}
+
+		.mathMeta {
+			color: #d7d7d7;
+			font-size: 12px;
+			font-weight: normal;
+		}
+
+		.mathSubhead {
+			color: #d7d7d7;
+			font-size: 12px;
+			font-weight: bold;
+			margin-top: 6px;
+			text-transform: uppercase;
+		}
+
+		.mathList {
+			list-style: none;
+			margin: 4px 0 0;
+			padding: 0;
+		}
+
+		.mathList li {
+			align-items: center;
+			border-top: 1px solid #3f3f3f;
+			display: grid;
+			column-gap: 6px;
+			grid-template-columns: minmax(120px, 1.15fr) minmax(86px, 1fr) minmax(72px, 0.7fr);
+			padding: 5px 0;
+		}
+
+		.overviewList {
+			list-style: none;
+			margin: 4px 0 0;
+			padding: 0;
+		}
+
+		.overviewList > li {
+			border-top: 1px solid #3f3f3f;
+			padding: 5px 0;
+		}
+
+		.overviewList > li.overviewGroupStart {
+			border-top-color: #666;
+			margin-top: 4px;
+			padding-top: 7px;
+		}
+
+		.overviewList ul {
+			color: #d7d7d7;
+			list-style: disc;
+			margin: 3px 0 0 18px;
+			padding: 0;
+		}
+
+		.mathTermLabel {
+			display: flex;
+			flex-direction: column;
+			font-size: 12px;
+			gap: 2px;
+			line-height: 1.25;
+			min-width: 0;
+		}
+
+		.mathTermLabel span {
+			display: block;
+		}
+
+		.mathResult {
+			border-top: 1px solid #666;
+			color: #ffb86b;
+			font-weight: bold;
+			margin-top: 6px;
+			padding-top: 6px;
+		}
+
+		.mathLine code,
+		.mathList code {
+			color: #ffb86b;
+			white-space: nowrap;
+		}
+
+		.mathLine code.stackedFormula,
+		.mathList code.stackedFormula {
+			align-items: flex-start;
+			border-left: 1px solid #4a4a4a;
+			border-right: 1px solid #4a4a4a;
+			box-sizing: border-box;
+			display: inline-flex;
+			flex-direction: column;
+			font-size: 12px;
+			gap: 2px;
+			height: 100%;
+			justify-content: center;
+			justify-self: stretch;
+			line-height: 1.25;
+			padding: 0 6px;
+			text-align: left;
+			white-space: normal;
+			width: 100%;
+		}
+
+		.formulaProduct {
+			align-self: center;
+			background: #3a2a18;
+			border: 1px solid #8c6330;
+			border-radius: 4px;
+			color: #ffd08a;
+			font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+			font-size: 12px;
+			font-weight: bold;
+			justify-self: center;
+			margin-left: 0;
+			padding: 2px 6px;
+			text-align: center;
+			white-space: nowrap;
+		}
+
+		.formulaSpacer {
+			border-left: 1px solid #4a4a4a;
+			border-right: 1px solid #4a4a4a;
+			box-sizing: border-box;
+			display: block;
+			height: 100%;
+			justify-self: stretch;
+			min-height: 18px;
+			width: 100%;
+		}
+
+		.branchLabel {
+			color: #7cc7ff;
+			font-weight: bold;
+			margin-bottom: 8px;
+		}
+
+		.choiceFooter {
+			color: #d7d7d7;
+			font-size: 12px;
+			font-weight: bold;
+			margin-top: 8px;
+		}
+
+		.modifierRow td {
+			background: #202020;
+			border-top: 1px solid #555;
+			color: #d7d7d7;
+			font-size: 12px;
+			font-weight: bold;
+			padding-bottom: 6px;
+			padding-top: 6px;
+		}
+
+		.modifierRow .choiceFooter {
+			margin-top: 0;
+		}
+
+		.sourceNameRow td {
+			border-top: 4px solid #6f6f6f;
+			border-bottom: 1px solid #444;
+			padding-bottom: 6px;
+			padding-top: 10px;
+			vertical-align: middle;
+		}
+
+		.sourceSectionRow td {
+			padding-bottom: 5px;
+			padding-top: 5px;
+			vertical-align: top;
+		}
+
+		.buttonRow {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin: 10px 0;
+		}
+
+		.randomCard {
+			background: #202020;
+			border: 1px solid #555;
+			border-radius: 6px;
+			margin: 12px 0;
+			padding: 12px;
+		}
+
+		.randomCard h2 {
+			margin: 0 0 8px;
+		}
+
+		.randomIdentity {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin-bottom: 6px;
+		}
+
+		.randomIdentity span,
+		.randomIdentity strong {
+			background: #2b2b2b;
+			border: 1px solid #555;
+			border-radius: 4px;
+			padding: 3px 7px;
+		}
+
+		.randomBranch {
+			color: #7cc7ff;
+			font-size: 13px;
+			margin-bottom: 10px;
+		}
+
+		.randomSection {
+			border-top: 1px solid #3f3f3f;
+			padding: 8px 0;
+		}
+
+		.randomSection h3 {
+			color: #d7d7d7;
+			font-size: 12px;
+			margin: 0 0 4px;
+			text-transform: uppercase;
+		}
+
+		.randomSection ul {
+			margin: 0 0 0 18px;
+			padding: 0;
+		}
+
+		.abilityScores ul {
+			display: grid;
+			gap: 3px 16px;
+			grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+			list-style: none;
+			margin-left: 0;
+		}
+
+		.abilityName {
+			color: #d7d7d7;
+		}
+
+		.abilityBreakdown {
+			color: #aaa;
+			font-size: 12px;
+		}
+
+		.abilityBonus {
+			font-weight: bold;
+		}
+
+		.abilityBonus1 {
+			color: #7cc7ff;
+		}
+
+		.abilityBonus2 {
+			color: #ffb86b;
+		}
+
+		.randomTime {
+			color: #aaa;
+			font-size: 12px;
+			margin: -6px 0 12px;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>D&D Character Counter</h1>
+
+	<label>Background</label>
+	<select id="backgroundSelect"></select>
+
+	<label>Race</label>
+	<select id="raceSelect"></select>
+
+	<label>Class</label>
+	<select id="classSelect"></select>
+
+	<div class="buttonRow">
+		<button id="generateBtn">Generate</button>
+		<button id="runAllBtn">Run All Combinations</button>
+	</div>
+
+	<div id="randomOutput"></div>
+	<div class="totalBox" id="totalBox"></div>
+	<div id="results"></div>
+
+	<script src="skills.js"></script>
+	<script src="main.js"></script>
+	<script src="all.js"></script>
+	<script src="random.js"></script>
+</body>
+
+</html>

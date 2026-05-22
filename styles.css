@@ -1,0 +1,131 @@
+body {
+	font-family: Arial, sans-serif;
+	background: #222;
+	color: white;
+	padding: 20px;
+}
+
+select,
+button {
+	padding: 8px;
+	margin: 10px 5px;
+}
+
+label {
+	margin-left: 5px;
+}
+
+table {
+	border-collapse: collapse;
+	margin-top: 20px;
+	width: 100%;
+	background: #333;
+}
+
+th,
+td {
+	border: 1px solid #555;
+	padding: 10px;
+	vertical-align: top;
+	text-align: left;
+}
+
+th {
+	background: #444;
+}
+
+tr:nth-child(even) {
+	background: #2a2a2a;
+}
+
+.totalBox {
+	margin-top: 20px;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.skillProf {
+	color: #7cc7ff;
+	font-weight: bold;
+}
+
+.artisanToolProf {
+	color: #ffb86b;
+	font-weight: bold;
+}
+
+.otherToolProf {
+	color: #ffb86b;
+	font-weight: bold;
+}
+
+.gamingSetProf {
+	color: white;
+	font-weight: bold;
+}
+
+.instrumentProf {
+	color: red;
+	font-weight: bold;
+}
+
+.weightFactor {
+	border-bottom: 1px dotted #ddd;
+	cursor: help;
+	display: inline-block;
+	position: relative;
+}
+
+.weightTooltip {
+	background: #111;
+	border: 1px solid #777;
+	border-radius: 4px;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+	color: white;
+	display: none;
+	font-size: 13px;
+	font-weight: normal;
+	left: auto;
+	line-height: 1.4;
+	max-width: min(420px, calc(100vw - 40px));
+	min-width: 220px;
+	padding: 8px;
+	position: absolute;
+	right: 0;
+	top: 100%;
+	white-space: normal;
+	width: max-content;
+	z-index: 10;
+}
+
+.weightFactor:hover .weightTooltip {
+	display: block;
+}
+
+.combinedChoice {
+	display: inline-block;
+	min-width: 160px;
+}
+
+.sourceModifier {
+	color: #d7d7d7;
+	display: inline-block;
+	font-size: 12px;
+	font-weight: normal;
+	margin-top: 2px;
+}
+
+.sourceChoice {
+	color: #f0f0f0;
+	display: inline-block;
+	font-size: 12px;
+	font-weight: normal;
+	margin-top: 2px;
+}
+
+.weightTooltipSubline {
+	color: #d0d0d0;
+	display: inline-block;
+	font-size: 11px;
+	padding-left: 10px;
+}
