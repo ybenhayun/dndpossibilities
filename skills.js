@@ -2871,7 +2871,8 @@ const GLOBALS = {
 			]
 		}
 	},
-	"pointBuyWeight": 12282
+	"pointBuyWeight": 12282,
+	"rolledAbilityScoreWeight": 16 ** 6
 };
 
 function hasEveryTag(attribute, tags) {

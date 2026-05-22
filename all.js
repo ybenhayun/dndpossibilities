@@ -112,15 +112,21 @@ function allBreakdownHTML(title, label, names, totals, baseTotal) {
 function allTotalHTML(branchRows, baseTotal, elapsedMs, cached = false) {
 	let globalLanguage = GLOBAL_LANGUAGE_WEIGHT;
 	let pointBuy = BigInt(GLOBALS.pointBuyWeight);
-	let finalTotal = baseTotal * globalLanguage * pointBuy;
+	let rolledAbilityScores = BigInt(GLOBALS.rolledAbilityScoreWeight);
+	let pointBuyTotal = baseTotal * globalLanguage * pointBuy;
+	let rolledTotal = baseTotal * globalLanguage * rolledAbilityScores;
 	return `
 		<div>
 			<b>BRANCH ROWS:</b> ${allFormat(branchRows)}<br>
 			<b>BASE WEIGHT:</b> ${allFormat(baseTotal)}<br>
-			<b>FINAL WEIGHT:</b> ${allFormat(baseTotal)}
+			<b>POINT-BUY TOTAL:</b> ${allFormat(baseTotal)}
 			&times; ${allFormat(globalLanguage)}
 			&times; ${allFormat(pointBuy)}
-			= ${allFormat(finalTotal)}<br>
+			= ${allFormat(pointBuyTotal)}<br>
+			<b>ROLLED-SCORE TOTAL:</b> ${allFormat(baseTotal)}
+			&times; ${allFormat(globalLanguage)}
+			&times; ${allFormat(rolledAbilityScores)}
+			= ${allFormat(rolledTotal)}<br>
 			<b>TIME:</b> ${allElapsed(elapsedMs)}${cached ? " (cached)" : ""}
 		</div>
 	`;

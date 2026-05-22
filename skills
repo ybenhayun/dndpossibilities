@@ -1,0 +1,285 @@
+const backgrounds = {
+
+			Acolyte: {
+				fixed: [
+					"Insight",
+					"Religion"
+				]
+			},
+
+			Artisan: {
+				fixed: [
+					"Investigation",
+					"Persuasion"
+				]
+			},
+
+			Charlatan: {
+				fixed: [
+					"Deception",
+					"Sleight of Hand"
+				]
+			},
+
+			Criminal: {
+				fixed: [
+					"Stealth",
+					"Sleight of Hand"
+				]
+			},
+
+			Entertainer: {
+				fixed: [
+					"Acrobatics",
+					"Performance"
+				]
+			},
+
+			Farmer: {
+				fixed: [
+					"Animal Handling",
+					"Nature"
+				]
+			},
+
+			Guard: {
+				fixed: [
+					"Athletics",
+					"Perception"
+				]
+			},
+
+			Guide: {
+				fixed: [
+					"Stealth",
+					"Survival"
+				]
+			},
+
+			Hermit: {
+				fixed: [
+					"Medicine",
+					"Religion"
+				]
+			},
+
+			Merchant: {
+				fixed: [
+					"Animal Handling",
+					"Persuasion"
+				]
+			},
+
+			Noble: {
+				fixed: [
+					"History",
+					"Persuasion"
+				]
+			},
+
+			Sage: {
+				fixed: [
+					"Arcana",
+					"History"
+				]
+			},
+
+			Sailor: {
+				fixed: [
+					"Acrobatics",
+					"Perception"
+				]
+			},
+
+			Scribe: {
+				fixed: [
+					"Investigation",
+					"Perception"
+				]
+			},
+
+			Soldier: {
+				fixed: [
+					"Athletics",
+					"Intimidation"
+				]
+			},
+
+			Wayfarer: {
+				fixed: [
+					"Insight",
+					"Stealth"
+				]
+			}
+		};
+
+		// -----------------------------
+		// RACES
+		// -----------------------------
+
+		const races = {
+
+			Bugbear: {
+				choose: {
+					count: 1,
+					options: [
+						"Stealth"
+					]
+				}
+			},
+
+			Centaur: {
+				choose: {
+					count: 1,
+					options: [
+						"Animal Handling",
+						"Medicine",
+						"Nature",
+						"Survival"
+					]
+				}
+			},
+
+			Changeling: {
+				choose: {
+					count: 2,
+					options: [
+                        "Deception",
+                        "Insight",
+                        "Performance",
+                        "Intimidation",
+                        "Persuasion"
+                    ]
+				}
+			},
+
+			Eladrin: {
+				choose: {
+					count: 1,
+					options: [
+                        "Perception"
+                    ]
+				}
+			},            
+
+			Elf: {
+				choose: {
+					count: 1,
+					options: [
+                        "Insight",
+                        "Survival",
+                        "Perception",                        
+                    ]
+				}
+			},            
+
+			Goliath: {
+				choose: {
+					count: 1,
+					options: [
+                        "Athletics"                        
+                    ]
+				}
+			},
+
+			Harengon: {
+				choose: {
+					count: 1,
+					options: [
+						"Perception"
+					]
+				}
+			},
+
+            Human: {
+				choose: {
+					count: 1,
+					options: ALL_SKILLS
+				}
+			},
+
+			Kenku: {
+				choose: {
+					count: 2,
+					options: ALL_SKILLS
+				}
+			},
+
+			Kobold: {
+				choose: {
+					count: 1,
+					options: [
+                        "Arcana",
+                        "Investigation",
+                        "Medicine",
+                        "Sleight of Hand",
+                        "Survival"
+                    ]
+				}
+			},
+
+			Lizardfolk: {
+				choose: {
+					count: 2,
+					options: [
+						"Animal Handling",
+						"Nature",
+						"Perception",
+						"Stealth",
+						"Survival",
+                        "Medicine"
+					]
+				}
+			},
+
+			Satyr: {
+				choose: {
+					count: 2,
+					options: [
+						"Performance",
+						"Persuasion"
+					]
+				}
+			},
+
+			SeaElf: {
+				choose: {
+					count: 1,
+					options: [
+                        "Perception"
+                    ]
+				}
+			},     
+            
+			ShadarKai: {
+				choose: {
+					count: 1,
+					options: [
+                        "Perception"
+                    ]
+				}
+			},                   
+
+			Tabaxi: {
+				choose: {
+					count: 2,
+					options: [
+						"Perception",
+						"Stealth"
+					]
+				}
+			},
+
+			Tortle: {
+				choose: {
+					count: 1,
+					options: [
+						"Survival",
+                        "Animal Handling",
+                        "Medicine",
+                        "Nature",
+                        "Stealth"
+					]
+				}
+			}
+		};
