@@ -17,6 +17,36 @@ const ORIGIN_FEATS = [
 ];
 const REPEATABLE_FEATS = new Set(["Skilled", "Magic Initiate"]);
 const MAGIC_INITIATE_LISTS = ["cleric", "druid", "wizard"];
+const SKILL_MATH_ABBREVIATIONS = {
+	"Barbarian": "BAR",
+	"Bard": "BRD",
+	"Cleric": "CLE",
+	"Druid": "DRU",
+	"Fighter": "FIG",
+	"Monk": "MON",
+	"Paladin": "PAL",
+	"Ranger": "RAN",
+	"Rogue": "ROG",
+	"Sorcerer": "SOR",
+	"Warlock": "WAR",
+	"Wizard": "WIZ",
+	"Bugbear": "BUG",
+	"Centaur": "CEN",
+	"Changeling": "CHG",
+	"Eladrin": "ELD",
+	"Elf": "ELF",
+	"Harengon": "HAR",
+	"Human": "HUM",
+	"Kenku": "KEN",
+	"Kobold": "KOB",
+	"Lizardfolk": "LIZ",
+	"Satyr": "SAT",
+	"SeaElf": "SEA",
+	"ShadarKai": "SHK",
+	"Shifter": "SHF",
+	"Tabaxi": "TAB",
+	"Tortle": "TOR"
+};
 
 const attributeByName = new Map(ATTRIBUTES.map(attribute => [attribute.name, attribute]));
 
@@ -53,6 +83,21 @@ function format(value) {
 // Converts a class name into its data tag.
 function classTagFor(className) {
 	return className ? className.toLowerCase() : "";
+}
+
+// Shortens source names used inside skill-math labels.
+function skillMathAbbreviation(name) {
+	return SKILL_MATH_ABBREVIATIONS[name] || name;
+}
+
+// Formats a named skill pool label for math rows.
+function namedSkillMathLabel(name) {
+	return `${skillMathAbbreviation(name)} skills`;
+}
+
+// Formats combined named skill pool labels for math rows.
+function combinedSkillMathLabel(names) {
+	return `${names.map(skillMathAbbreviation).join("/")} skills`;
 }
 
 // Returns a source modifier list with BigInt values.
@@ -1050,8 +1095,12 @@ function calculate(backgroundName, raceName, className) {
 	}
 
 	let baseWeight = staticWeight * branchTotal;
-	let globalWeight = GLOBAL_LANGUAGE_WEIGHT * BigInt(GLOBALS.pointBuyWeight);
-	let finalWeight = baseWeight * globalWeight;
+	let pointBuyWeight = BigInt(GLOBALS.pointBuyWeight);
+	let rolledAbilityScoreWeight = BigInt(GLOBALS.rolledAbilityScoreWeight);
+	let pointBuyGlobalWeight = GLOBAL_LANGUAGE_WEIGHT * pointBuyWeight;
+	let rolledGlobalWeight = GLOBAL_LANGUAGE_WEIGHT * rolledAbilityScoreWeight;
+	let finalWeight = baseWeight * pointBuyGlobalWeight;
+	let rolledFinalWeight = baseWeight * rolledGlobalWeight;
 
 	return {
 		backgroundName,
@@ -1059,10 +1108,14 @@ function calculate(backgroundName, raceName, className) {
 		className,
 		branchRows,
 		baseWeight,
-		globalWeight,
+		globalWeight: pointBuyGlobalWeight,
 		finalWeight,
+		pointBuyGlobalWeight,
+		rolledGlobalWeight,
+		rolledFinalWeight,
 		globalLanguageWeight: GLOBAL_LANGUAGE_WEIGHT,
-		pointBuyWeight: BigInt(GLOBALS.pointBuyWeight)
+		pointBuyWeight,
+		rolledAbilityScoreWeight
 	};
 }
 
@@ -1473,7 +1526,7 @@ function bucketRegionLabel(mask, component) {
 function genericSkillRegionLabel(component) {
 	let constrainedSkillNames = constrainedSkillRegionNames(component);
 	if (!constrainedSkillNames.length) return "skills";
-	return "other";
+	return "other skills";
 }
 
 // Lists named skill constraints in a component.
@@ -2019,7 +2072,7 @@ function skillComponentMathParts(component, fixedSkillCount) {
 			data.otherPool.length === 0 &&
 			data.terms.length === 1
 		) {
-			let label = `${data.remainingPicks} ${data.className}`;
+			let label = `${data.remainingPicks} ${namedSkillMathLabel(data.className)}`;
 			terms = [`
 				<li>
 					${renderMathTermLabel(label)}
@@ -2207,8 +2260,8 @@ function skillRegionSummaryLabel(mask, component) {
 	let names = component
 		.map((feature, index) => (mask & (1 << index) && !featureIsAnySkillChoice(feature) ? featureSourceName(feature) : null))
 		.filter(Boolean);
-	if (!names.length) return constrainedSkillRegionNames(component).length ? "other" : "general";
-	return names.join("/");
+	if (!names.length) return constrainedSkillRegionNames(component).length ? "other skills" : "skills";
+	return combinedSkillMathLabel(names);
 }
 
 // Checks whether region picks can satisfy feature counts.
@@ -2248,7 +2301,7 @@ function skillRegionLabel(mask, component) {
 	let names = component
 		.map((feature, index) => (mask & (1 << index) && !featureIsAnySkillChoice(feature) ? featureSourceName(feature) : null))
 		.filter(Boolean);
-	return names.length ? names.join("/") : genericSkillRegionLabel(component);
+	return names.length ? combinedSkillMathLabel(names) : genericSkillRegionLabel(component);
 }
 
 // Builds overlap-region data for general components.
@@ -2275,12 +2328,16 @@ function generalRegionSummary(regions, component) {
 // Labels one general-region term.
 function generalRegionLabel(mask, component) {
 	let descriptors = generalRegionDescriptors(mask, component);
+	let constrainedCount = component.filter(feature => !featureRegionDescriptor(feature).general).length;
+	if (descriptors.length === 1 && descriptors[0].key === "general") {
+		return constrainedCount ? "other proficiencies" : descriptors[0].label;
+	}
 	if (descriptors.length === 1) return descriptors[0].label;
 	if (descriptors.every(descriptor => descriptor.kind === "skill")) {
 		let names = descriptors
 			.map(descriptor => descriptor.summary)
 			.filter(name => name !== "skills");
-		return names.length ? names.join("/") : "skills";
+		return names.length ? combinedSkillMathLabel(names) : "skills";
 	}
 	return descriptors.map(descriptor => descriptor.label).join(" / ");
 }
@@ -2305,9 +2362,9 @@ function generalRegionSummaryLabel(mask, component) {
 			.map(descriptor => descriptor.summary)
 			.filter(name => name !== "skills");
 		if (!names.length && constrainedNames.length) {
-			return "other";
+			return "other skills";
 		}
-		return names.length ? names.join("/") : "skills";
+		return names.length ? combinedSkillMathLabel(names) : "skills";
 	}
 	let constrainedCount = component.filter(feature => !featureRegionDescriptor(feature).general).length;
 	let names = descriptors.map(descriptor => descriptor.summary);
@@ -2357,7 +2414,7 @@ function featureRegionDescriptor(feature) {
 		}
 		return {
 			key: `skill:${sourceName}`,
-			label: sourceName,
+			label: namedSkillMathLabel(sourceName),
 			summary: sourceName,
 			kind: "skill"
 		};
@@ -2419,7 +2476,12 @@ function combinedSimpleSkillTermHTML(sections, total) {
 // Labels a simple skill feature term.
 function skillFeatureTermLabel(feature) {
 	let constraint = skillFeatureConstraint(feature);
-	if (constraint) return constraint.replace(/^at least /, "").replace(/\s+skills?$/, "");
+	if (constraint) {
+		let sourceName = featureSourceName(feature);
+		return sourceName
+			? `${feature.count} ${namedSkillMathLabel(sourceName)}`
+			: constraint.replace(/^at least /, "");
+	}
 	return `${feature.count} ${pluralizeChoiceLabel("skills", feature.count)}`;
 }
 
@@ -2437,7 +2499,7 @@ function skillRequirementMathHTML(component, fixedSkillCount) {
 		return renderSingleMathBlock(
 			"Skill Math",
 			skillPoolSummary(data),
-			`${data.remainingPicks} ${data.className}`,
+			`${data.remainingPicks} ${namedSkillMathLabel(data.className)}`,
 			`C(${data.classPool.length}, ${data.remainingPicks})`,
 			data.total
 		);
@@ -2502,8 +2564,8 @@ function skillRequirementData(component) {
 		mandatoryNames.size;
 	let atLeastClass = classFeature.count;
 	let regions = [
-		{ id: "class", label: className, options: classPool },
-		{ id: "other", label: "other", options: otherPool }
+		{ id: "class", label: namedSkillMathLabel(className), options: classPool },
+		{ id: "other", label: "other skills", options: otherPool }
 	].filter(region => region.options.length);
 	let result = overlapRegionTerms(
 		regions,
@@ -2525,7 +2587,7 @@ function skillRequirementData(component) {
 
 // Summarizes class and other skill pool sizes.
 function skillPoolSummary(data) {
-	return `${data.className}: ${data.classPool.length}, other: ${data.otherPool.length}`;
+	return `${namedSkillMathLabel(data.className)}: ${data.classPool.length}, other skills: ${data.otherPool.length}`;
 }
 
 // Renders mixed artisan-tool/instrument math.
@@ -2971,11 +3033,17 @@ function render(result, elapsedMs) {
 	let results = document.getElementById("results");
 
 	totalBox.innerHTML = `
-		<strong>Total weight:</strong>
+		<strong>Point-buy total:</strong>
 		${format(result.baseWeight)}
 		&times; ${format(result.globalLanguageWeight)}
 		&times; ${format(result.pointBuyWeight)}
 		= ${format(result.finalWeight)}
+		<br>
+		<strong>Rolled-score total:</strong>
+		${format(result.baseWeight)}
+		&times; ${format(result.globalLanguageWeight)}
+		&times; ${format(result.rolledAbilityScoreWeight)}
+		= ${format(result.rolledFinalWeight)}
 		<br>
 		<span>Time: ${elapsedMs.toFixed(2)}ms</span>
 	`;
