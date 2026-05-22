@@ -1195,10 +1195,6 @@ function choiceMathHTML(features, fixedSkillCount, expertiseCount) {
 	let skillCountEntries = [...bySkillCount.entries()]
 		.filter(([, ways]) => ways > 0n)
 		.sort(([left], [right]) => left - right);
-	let bucketBreakdown = skillCountBucketBreakdown(active, fixedSkillCount);
-	let bucketBreakdownHtml = bucketBreakdown
-		? bucketBreakdown.map(bucket => skillBucketBreakdownHTML(bucket)).join("")
-		: "";
 	let terms = skillCountEntries
 		.map(([addedSkills, ways]) => {
 			let expertiseChoices = choose(fixedSkillCount + addedSkills, expertiseCount);
@@ -1218,7 +1214,6 @@ function choiceMathHTML(features, fixedSkillCount, expertiseCount) {
 			${skillCountEntries.length > 1 ? `<ul class="mathList">
 				${renderMathTotalRow("skill/proficiency sets by skill count", skillBucketTotal)}
 			</ul>` : ""}
-			${bucketBreakdownHtml ? `<div class="mathSubhead">Bucket Math</div>${bucketBreakdownHtml}` : ""}
 			<ul class="mathList">${terms.join("")}</ul>
 			${skillCountEntries.length > 1 ? `<ul class="mathList">
 				${renderMathTotalRow("skill/proficiency sets with expertise", expertiseTotal)}
