@@ -8,6 +8,7 @@ const ATTRIBUTES = [
 		"type": "proficiency",
 		"tags": [
 			"fighter",
+			"kender",
 			"monk",
 			"rogue",
 			"shifter",
@@ -36,6 +37,7 @@ const ATTRIBUTES = [
 			"koboldCraftiness",
 			"skill",
 			"sorcerer",
+			"vedalken",
 			"warlock",
 			"wizard"
 		]
@@ -46,6 +48,7 @@ const ATTRIBUTES = [
 		"tags": [
 			"barbarian",
 			"fighter",
+			"locathah",
 			"monk",
 			"paladin",
 			"ranger",
@@ -73,6 +76,7 @@ const ATTRIBUTES = [
 			"fighter",
 			"monk",
 			"skill",
+			"vedalken",
 			"warlock",
 			"wizard"
 		]
@@ -117,9 +121,11 @@ const ATTRIBUTES = [
 		"type": "proficiency",
 		"tags": [
 			"koboldCraftiness",
+			"kender",
 			"ranger",
 			"rogue",
 			"skill",
+			"vedalken",
 			"warlock",
 			"wizard"
 		]
@@ -136,6 +142,7 @@ const ATTRIBUTES = [
 			"paladin",
 			"skill",
 			"tortle",
+			"vedalken",
 			"wizard"
 		]
 	},
@@ -157,6 +164,7 @@ const ATTRIBUTES = [
 		"name": "Perception",
 		"type": "proficiency",
 		"tags": [
+			"astralElf",
 			"barbarian",
 			"druid",
 			"eladrin",
@@ -166,6 +174,7 @@ const ATTRIBUTES = [
 			"fighter",
 			"harengon",
 			"lizardfolk",
+			"locathah",
 			"ranger",
 			"rogue",
 			"seaElf",
@@ -182,7 +191,8 @@ const ATTRIBUTES = [
 			"changeling",
 			"rogue",
 			"satyr",
-			"skill"
+			"skill",
+			"vedalken"
 		]
 	},
 	{
@@ -195,7 +205,8 @@ const ATTRIBUTES = [
 			"rogue",
 			"satyr",
 			"skill",
-			"sorcerer"
+			"sorcerer",
+			"verdan"
 		]
 	},
 	{
@@ -217,8 +228,10 @@ const ATTRIBUTES = [
 		"type": "proficiency",
 		"tags": [
 			"koboldCraftiness",
+			"kender",
 			"rogue",
-			"skill"
+			"skill",
+			"vedalken"
 		]
 	},
 	{
@@ -226,6 +239,7 @@ const ATTRIBUTES = [
 		"type": "proficiency",
 		"tags": [
 			"bugbear",
+			"kender",
 			"lizardfolk",
 			"monk",
 			"ranger",
@@ -247,6 +261,7 @@ const ATTRIBUTES = [
 			"elfWood",
 			"fighter",
 			"koboldCraftiness",
+			"kender",
 			"lizardfolk",
 			"ranger",
 			"shifter",
@@ -1854,6 +1869,41 @@ const RACES = {
 			"size": 2
 		}
 	},
+	"Astral Elf": {
+		"fixed": [
+			"Perception"
+		],
+		"modifiers": {
+			"spellcastingAbility": 3
+		},
+		"choices": [
+			{
+				"count": 1,
+				"from": {
+					"names": [
+						"Dancing Lights",
+						"Light",
+						"Sacred Flame"
+					]
+				}
+			}
+		]
+	},
+	"Autognome": {
+		"choices": [
+			{
+				"count": 2,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"skill"
+						]
+					}
+				}
+			}
+		]
+	},
 	"Bugbear": {
 		"choices": [
 			{
@@ -1906,6 +1956,24 @@ const RACES = {
 		]
 	},
 	"Deep Gnome": {},
+	"Dhampir": {
+		"modifiers": {
+			"size": 2
+		},
+		"choices": [
+			{
+				"count": 2,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"skill"
+						]
+					}
+				}
+			}
+		]
+	},
 	"Gnome": {
 		"dynamic": {
 			"choiceBranches": [
@@ -2091,10 +2159,16 @@ const RACES = {
 			"spellcastingAbility": 3
 		}
 	},
+	"Giff": {},
 	"Goblin": {},
 	"Goliath": {
 		"modifiers": {
 			"subtype": 6
+		}
+	},
+	"Hadozee": {
+		"modifiers": {
+			"size": 2
 		}
 	},
 	"Halfling": {},
@@ -2111,6 +2185,29 @@ const RACES = {
 						"all": [
 							"skill",
 							"harengon"
+						]
+					}
+				}
+			}
+		]
+	},
+	"Hexblood": {
+		"fixed": [
+			"Disguise Self",
+			"Hex"
+		],
+		"modifiers": {
+			"size": 2,
+			"spellcastingAbility": 3
+		},
+		"choices": [
+			{
+				"count": 2,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"skill"
 						]
 					}
 				}
@@ -2156,6 +2253,23 @@ const RACES = {
 			}
 		}
 	},
+	"Kalashtar": {},
+	"Kender": {
+		"choices": [
+			{
+				"count": 1,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"skill",
+							"kender"
+						]
+					}
+				}
+			}
+		]
+	},
 	"Kenku": {
 		"modifiers": {
 			"size": 2
@@ -2173,6 +2287,15 @@ const RACES = {
 				}
 			}
 		]
+	},
+	"Khoravar": {
+		"fixed": [
+			"Friends"
+		],
+		"modifiers": {
+			"size": 2,
+			"spellcastingAbility": 3
+		}
 	},
 	"Kobold": {
 		"dynamic": {
@@ -2251,8 +2374,39 @@ const RACES = {
 			}
 		]
 	},
+	"Locathah": {
+		"fixed": [
+			"Athletics",
+			"Perception"
+		]
+	},
+	"Loxodon": {},
+	"Leonin": {},
 	"Minotaur": {},
 	"Orc": {},
+	"Plasmoid": {
+		"modifiers": {
+			"size": 2
+		}
+	},
+	"Reborn": {
+		"modifiers": {
+			"size": 2
+		},
+		"choices": [
+			{
+				"count": 2,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"skill"
+						]
+					}
+				}
+			}
+		]
+	},
 	"Satyr": {
 		"choices": [
 			{
@@ -2331,6 +2485,11 @@ const RACES = {
 			}
 		]
 	},
+	"Simic Hybrid": {
+		"modifiers": {
+			"subtype": 3
+		}
+	},
 	"Tabaxi": {
 		"modifiers": {
 			"size": 2
@@ -2349,6 +2508,11 @@ const RACES = {
 				}
 			}
 		]
+	},
+	"Thri-kreen": {
+		"modifiers": {
+			"size": 2
+		}
 	},
 	"Tiefling": {
 		"fixed": [
@@ -2415,6 +2579,64 @@ const RACES = {
 		"modifiers": {
 			"spellcastingAbility": 3
 		}
+	},
+	"Vedalken": {
+		"choices": [
+			{
+				"count": 1,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"skill",
+							"vedalken"
+						]
+					}
+				}
+			},
+			{
+				"count": 1,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"tool"
+						]
+					}
+				}
+			}
+		]
+	},
+	"Verdan": {
+		"fixed": [
+			"Persuasion"
+		]
+	},
+	"Warforged": {
+		"choices": [
+			{
+				"count": 1,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"skill"
+						]
+					}
+				}
+			},
+			{
+				"count": 1,
+				"from": {
+					"type": "proficiency",
+					"tags": {
+						"all": [
+							"tool"
+						]
+					}
+				}
+			}
+		]
 	},
 	"Yuan-ti": {
 		"fixed": [
