@@ -1,90 +1,41 @@
 // skills.js
-// Experimental tagged-data schema. This file is not loaded by index.html yet.
-// It keeps the tagged data for the default counting engine.
+// Tagged-data schema for the default counting engine.
 
 const ATTRIBUTES = [
 	{
-		"name": "Acrobatics",
-		"type": "proficiency",
-		"tags": [
-			"fighter",
-			"kender",
-			"monk",
-			"rogue",
-			"shifter",
-			"skill"
-		]
+		name: "Acrobatics",
+		type: "skill",
+		tags: ["fighter", "kender", "monk", "rogue", "shifter"]
 	},
 	{
-		"name": "Animal Handling",
-		"type": "proficiency",
-		"tags": [
-			"barbarian",
-			"centaur",
-			"druid",
-			"fighter",
-			"lizardfolk",
-			"ranger",
-			"skill",
-			"tortle"
-		]
+		name: "Animal Handling",
+		type: "skill",
+		tags: ["barbarian", "centaur", "druid", "fighter", "lizardfolk", "ranger", "tortle"]
 	},
 	{
-		"name": "Arcana",
-		"type": "proficiency",
-		"tags": [
-			"druid",
-			"koboldCraftiness",
-			"skill",
-			"sorcerer",
-			"vedalken",
-			"warlock",
-			"wizard"
-		]
+		name: "Arcana",
+		type: "skill",
+		tags: ["druid", "koboldCraftiness", "sorcerer", "vedalken", "warlock", "wizard"]
 	},
 	{
-		"name": "Athletics",
-		"type": "proficiency",
-		"tags": [
-			"barbarian",
-			"fighter",
-			"locathah",
-			"monk",
-			"paladin",
-			"ranger",
-			"rogue",
-			"shifter",
-			"skill"
-		]
+		name: "Athletics",
+		type: "skill",
+		tags: ["barbarian", "fighter", "locathah", "monk", "paladin", "ranger", "rogue", "shifter"]
 	},
 	{
-		"name": "Deception",
-		"type": "proficiency",
-		"tags": [
-			"changeling",
-			"rogue",
-			"skill",
-			"sorcerer",
-			"warlock"
-		]
+		name: "Deception",
+		type: "skill",
+		tags: ["changeling", "rogue", "sorcerer", "warlock"]
 	},
 	{
-		"name": "History",
-		"type": "proficiency",
-		"tags": [
-			"cleric",
-			"fighter",
-			"monk",
-			"skill",
-			"vedalken",
-			"warlock",
-			"wizard"
-		]
+		name: "History",
+		type: "skill",
+		tags: ["cleric", "fighter", "monk", "vedalken", "warlock", "wizard"]
 	},
 	{
-		"name": "Insight",
-		"type": "proficiency",
-		"tags": [
+		name: "Insight",
+		type: "skill",
+		tags: [
 			"changeling",
 			"cleric",
 			"druid",
@@ -96,74 +47,34 @@ const ATTRIBUTES = [
 			"paladin",
 			"ranger",
 			"rogue",
-			"skill",
 			"sorcerer",
 			"wizard"
 		]
 	},
 	{
-		"name": "Intimidation",
-		"type": "proficiency",
-		"tags": [
-			"barbarian",
-			"changeling",
-			"fighter",
-			"paladin",
-			"rogue",
-			"shifter",
-			"skill",
-			"sorcerer",
-			"warlock"
-		]
+		name: "Intimidation",
+		type: "skill",
+		tags: ["barbarian", "changeling", "fighter", "paladin", "rogue", "shifter", "sorcerer", "warlock"]
 	},
 	{
-		"name": "Investigation",
-		"type": "proficiency",
-		"tags": [
-			"koboldCraftiness",
-			"kender",
-			"ranger",
-			"rogue",
-			"skill",
-			"vedalken",
-			"warlock",
-			"wizard"
-		]
+		name: "Investigation",
+		type: "skill",
+		tags: ["koboldCraftiness", "kender", "ranger", "rogue", "vedalken", "warlock", "wizard"]
 	},
 	{
-		"name": "Medicine",
-		"type": "proficiency",
-		"tags": [
-			"centaur",
-			"cleric",
-			"druid",
-			"koboldCraftiness",
-			"lizardfolk",
-			"paladin",
-			"skill",
-			"tortle",
-			"vedalken",
-			"wizard"
-		]
+		name: "Medicine",
+		type: "skill",
+		tags: ["centaur", "cleric", "druid", "koboldCraftiness", "lizardfolk", "paladin", "tortle", "vedalken", "wizard"]
 	},
 	{
-		"name": "Nature",
-		"type": "proficiency",
-		"tags": [
-			"barbarian",
-			"centaur",
-			"druid",
-			"lizardfolk",
-			"ranger",
-			"skill",
-			"tortle",
-			"warlock"
-		]
+		name: "Nature",
+		type: "skill",
+		tags: ["barbarian", "centaur", "druid", "lizardfolk", "ranger", "tortle", "warlock"]
 	},
 	{
-		"name": "Perception",
-		"type": "proficiency",
-		"tags": [
+		name: "Perception",
+		type: "skill",
+		tags: [
 			"astralElf",
 			"barbarian",
 			"druid",
@@ -179,80 +90,39 @@ const ATTRIBUTES = [
 			"rogue",
 			"seaElf",
 			"shadarKai",
-			"skill",
 			"tabaxi",
 			"tortle"
 		]
 	},
 	{
-		"name": "Performance",
-		"type": "proficiency",
-		"tags": [
-			"changeling",
-			"rogue",
-			"satyr",
-			"skill",
-			"vedalken"
-		]
+		name: "Performance",
+		type: "skill",
+		tags: ["changeling", "rogue", "satyr", "vedalken"]
 	},
 	{
-		"name": "Persuasion",
-		"type": "proficiency",
-		"tags": [
-			"changeling",
-			"cleric",
-			"paladin",
-			"rogue",
-			"satyr",
-			"skill",
-			"sorcerer",
-			"verdan"
-		]
+		name: "Persuasion",
+		type: "skill",
+		tags: ["changeling", "cleric", "paladin", "rogue", "satyr", "sorcerer", "verdan"]
 	},
 	{
-		"name": "Religion",
-		"type": "proficiency",
-		"tags": [
-			"cleric",
-			"druid",
-			"monk",
-			"paladin",
-			"skill",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
+		name: "Religion",
+		type: "skill",
+		tags: ["cleric", "druid", "monk", "paladin", "sorcerer", "warlock", "wizard"]
 	},
 	{
-		"name": "Sleight of Hand",
-		"type": "proficiency",
-		"tags": [
-			"koboldCraftiness",
-			"kender",
-			"rogue",
-			"skill",
-			"vedalken"
-		]
+		name: "Sleight of Hand",
+		type: "skill",
+		tags: ["koboldCraftiness", "kender", "rogue", "vedalken"]
 	},
 	{
-		"name": "Stealth",
-		"type": "proficiency",
-		"tags": [
-			"bugbear",
-			"kender",
-			"lizardfolk",
-			"monk",
-			"ranger",
-			"rogue",
-			"skill",
-			"tabaxi",
-			"tortle"
-		]
+		name: "Stealth",
+		type: "skill",
+		tags: ["bugbear", "kender", "lizardfolk", "monk", "ranger", "rogue", "tabaxi", "tortle"]
 	},
 	{
-		"name": "Survival",
-		"type": "proficiency",
-		"tags": [
+		name: "Survival",
+		type: "skill",
+		tags: [
 			"barbarian",
 			"centaur",
 			"druid",
@@ -265,2864 +135,1692 @@ const ATTRIBUTES = [
 			"lizardfolk",
 			"ranger",
 			"shifter",
-			"skill",
 			"tortle"
 		]
 	},
 	{
-		"name": "Alchemist's Supplies",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Brewer's Supplies",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Calligrapher's Supplies",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Carpenter's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Cartographer's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Cobbler's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Cook's Utensils",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Glassblower's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Jeweler's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Leatherworker's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Mason's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Painter's Supplies",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
-	},
-	{
-		"name": "Potter's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
+		name: "Alchemist's Supplies",
+		type: "artisanTool"
 	},
 	{
-		"name": "Smith's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
+		name: "Brewer's Supplies",
+		type: "artisanTool"
 	},
 	{
-		"name": "Tinker's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
+		name: "Calligrapher's Supplies",
+		type: "artisanTool"
 	},
 	{
-		"name": "Weaver's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
+		name: "Carpenter's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Woodcarver's Tools",
-		"type": "proficiency",
-		"tags": [
-			"artisanTool",
-			"tool"
-		]
+		name: "Cartographer's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Disguise Kit",
-		"type": "proficiency",
-		"tags": [
-			"otherTool",
-			"tool"
-		]
+		name: "Cobbler's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Forgery Kit",
-		"type": "proficiency",
-		"tags": [
-			"otherTool",
-			"tool"
-		]
+		name: "Cook's Utensils",
+		type: "artisanTool"
 	},
 	{
-		"name": "Herbalism Kit",
-		"type": "proficiency",
-		"tags": [
-			"otherTool",
-			"tool"
-		]
+		name: "Glassblower's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Navigator's Tools",
-		"type": "proficiency",
-		"tags": [
-			"otherTool",
-			"tool"
-		]
+		name: "Jeweler's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Poisoner's Kit",
-		"type": "proficiency",
-		"tags": [
-			"otherTool",
-			"tool"
-		]
+		name: "Leatherworker's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Thieves' Tools",
-		"type": "proficiency",
-		"tags": [
-			"otherTool",
-			"tool"
-		]
+		name: "Mason's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Dice Set",
-		"type": "proficiency",
-		"tags": [
-			"gamingSet",
-			"tool"
-		]
+		name: "Painter's Supplies",
+		type: "artisanTool"
 	},
 	{
-		"name": "Dragonchess Set",
-		"type": "proficiency",
-		"tags": [
-			"gamingSet",
-			"tool"
-		]
+		name: "Potter's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Playing Card Set",
-		"type": "proficiency",
-		"tags": [
-			"gamingSet",
-			"tool"
-		]
+		name: "Smith's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Three-Dragon Ante Set",
-		"type": "proficiency",
-		"tags": [
-			"gamingSet",
-			"tool"
-		]
+		name: "Tinker's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Bagpipes",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Weaver's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Drum",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Woodcarver's Tools",
+		type: "artisanTool"
 	},
 	{
-		"name": "Dulcimer",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Disguise Kit",
+		type: "kit"
 	},
 	{
-		"name": "Flute",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Forgery Kit",
+		type: "kit"
 	},
 	{
-		"name": "Horn",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Herbalism Kit",
+		type: "kit"
 	},
 	{
-		"name": "Lute",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Navigator's Tools",
+		type: "kit"
 	},
 	{
-		"name": "Lyre",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Poisoner's Kit",
+		type: "kit"
 	},
 	{
-		"name": "Pan Flute",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Thieves' Tools",
+		type: "kit"
 	},
 	{
-		"name": "Shawm",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Dice Set",
+		type: "gamingSet"
 	},
 	{
-		"name": "Viol",
-		"type": "proficiency",
-		"tags": [
-			"instrument"
-		]
+		name: "Dragonchess Set",
+		type: "gamingSet"
 	},
 	{
-		"name": "Common",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Playing Card Set",
+		type: "gamingSet"
 	},
 	{
-		"name": "Sign Language",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Three-Dragon Ante Set",
+		type: "gamingSet"
 	},
 	{
-		"name": "Draconic",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Bagpipes",
+		type: "instrument"
 	},
 	{
-		"name": "Dwarvish",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Drum",
+		type: "instrument"
 	},
 	{
-		"name": "Elvish",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Dulcimer",
+		type: "instrument"
 	},
 	{
-		"name": "Giant",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Flute",
+		type: "instrument"
 	},
 	{
-		"name": "Gnomish",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Horn",
+		type: "instrument"
 	},
 	{
-		"name": "Goblin",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Lute",
+		type: "instrument"
 	},
 	{
-		"name": "Halfling",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Lyre",
+		type: "instrument"
 	},
 	{
-		"name": "Orc",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Pan Flute",
+		type: "instrument"
 	},
 	{
-		"name": "Abyssal",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Shawm",
+		type: "instrument"
 	},
 	{
-		"name": "Celestial",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Viol",
+		type: "instrument"
 	},
 	{
-		"name": "Deep Speech",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Common",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Druidic",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Sign Language",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Infernal",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Draconic",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Primordial",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Dwarvish",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Sylvan",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Elvish",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Thieves' Cant",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Giant",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Undercommon",
-		"type": "language",
-		"tags": [
-			"language"
-		]
+		name: "Gnomish",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Alert",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Goblin",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Crafter",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Halfling",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Healer",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Orc",
+		type: "standardLanguage"
 	},
 	{
-		"name": "Lucky",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Abyssal",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Magic Initiate",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Celestial",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Musician",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Deep Speech",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Savage Attacker",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Druidic",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Skilled",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Infernal",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Tavern Brawler",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Primordial",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Tough",
-		"type": "feat",
-		"tags": [
-			"originFeat"
-		]
+		name: "Sylvan",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Acid Splash",
-		"type": "cantrip",
-		"tags": [
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
+		name: "Thieves' Cant",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Alarm",
-		"type": "level1spell",
-		"tags": [
-			"ranger",
-			"wizard"
-		]
+		name: "Undercommon",
+		type: "rareLanguage"
 	},
 	{
-		"name": "Animal Friendship",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"druid",
-			"ranger"
-		]
+		name: "Alert",
+		type: "originFeat"
 	},
 	{
-		"name": "Armor of Agathys",
-		"type": "level1spell",
-		"tags": [
-			"warlock"
-		]
+		name: "Crafter",
+		type: "originFeat"
 	},
 	{
-		"name": "Arms of Hadar",
-		"type": "level1spell",
-		"tags": [
-			"warlock"
-		]
+		name: "Healer",
+		type: "originFeat"
 	},
 	{
-		"name": "Bane",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"cleric",
-			"warlock"
-		]
+		name: "Lucky",
+		type: "originFeat"
 	},
 	{
-		"name": "Blade Ward",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
+		name: "Magic Initiate",
+		type: "originFeat"
 	},
 	{
-		"name": "Bless",
-		"type": "level1spell",
-		"tags": [
-			"cleric",
-			"paladin"
-		]
+		name: "Musician",
+		type: "originFeat"
 	},
 	{
-		"name": "Burning Hands",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"wizard"
-		]
+		name: "Savage Attacker",
+		type: "originFeat"
 	},
 	{
-		"name": "Charm Person",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"druid",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
+		name: "Skilled",
+		type: "originFeat"
 	},
 	{
-		"name": "Chill Touch",
-		"type": "cantrip",
-		"tags": [
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
+		name: "Tavern Brawler",
+		type: "originFeat"
 	},
 	{
-		"name": "Chromatic Orb",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"wizard"
-		]
+		name: "Tough",
+		type: "originFeat"
 	},
 	{
-		"name": "Color Spray",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"sorcerer",
-			"wizard"
-		]
+		name: "Acid Splash",
+		type: "cantrip",
+		tags: ["koboldSorcery", "sorcerer", "wizard"]
 	},
 	{
-		"name": "Command",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"cleric",
-			"paladin"
-		]
+		name: "Alarm",
+		type: "level1spell",
+		tags: ["ranger", "wizard"]
 	},
 	{
-		"name": "Compelled Duel",
-		"type": "level1spell",
-		"tags": [
-			"paladin"
-		]
+		name: "Animal Friendship",
+		type: "level1spell",
+		tags: ["bard", "druid", "ranger"]
 	},
 	{
-		"name": "Comprehend Languages",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
+		name: "Armor of Agathys",
+		type: "level1spell",
+		tags: ["warlock"]
 	},
 	{
-		"name": "Create or Destroy Water",
-		"type": "level1spell",
-		"tags": [
-			"cleric",
-			"druid"
-		]
+		name: "Arms of Hadar",
+		type: "level1spell",
+		tags: ["warlock"]
 	},
 	{
-		"name": "Cure Wounds",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"cleric",
-			"druid",
-			"paladin",
-			"ranger"
-		]
+		name: "Bane",
+		type: "level1spell",
+		tags: ["bard", "cleric", "warlock"]
 	},
 	{
-		"name": "Dancing Lights",
-		"type": "cantrip",
-		"tags": [
-			"astralElf",
-			"bard",
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
+		name: "Blade Ward",
+		type: "cantrip",
+		tags: ["bard", "koboldSorcery", "sorcerer", "warlock", "wizard"]
 	},
 	{
-		"name": "Detect Evil and Good",
-		"type": "level1spell",
-		"tags": [
-			"cleric",
-			"paladin"
-		]
+		name: "Bless",
+		type: "level1spell",
+		tags: ["cleric", "paladin"]
 	},
 	{
-		"name": "Detect Magic",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"cleric",
-			"druid",
-			"paladin",
-			"ranger",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
+		name: "Burning Hands",
+		type: "level1spell",
+		tags: ["sorcerer", "wizard"]
 	},
 	{
-		"name": "Detect Poison and Disease",
-		"type": "level1spell",
-		"tags": [
-			"cleric",
-			"druid",
-			"paladin",
-			"ranger"
-		]
+		name: "Charm Person",
+		type: "level1spell",
+		tags: ["bard", "druid", "sorcerer", "warlock", "wizard"]
 	},
 	{
-		"name": "Disguise Self",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"sorcerer",
-			"wizard"
-		]
+		name: "Chill Touch",
+		type: "cantrip",
+		tags: ["koboldSorcery", "sorcerer", "warlock", "wizard"]
 	},
 	{
-		"name": "Dissonant Whispers",
-		"type": "level1spell",
-		"tags": [
-			"bard"
-		]
+		name: "Chromatic Orb",
+		type: "level1spell",
+		tags: ["sorcerer", "wizard"]
 	},
 	{
-		"name": "Divine Favor",
-		"type": "level1spell",
-		"tags": [
-			"paladin"
-		]
+		name: "Color Spray",
+		type: "level1spell",
+		tags: ["bard", "sorcerer", "wizard"]
 	},
 	{
-		"name": "Divine Smite",
-		"type": "level1spell",
-		"tags": [
-			"paladin"
-		]
+		name: "Command",
+		type: "level1spell",
+		tags: ["bard", "cleric", "paladin"]
 	},
 	{
-		"name": "Druidcraft",
-		"type": "cantrip",
-		"tags": [
-			"druid"
-		]
+		name: "Compelled Duel",
+		type: "level1spell",
+		tags: ["paladin"]
 	},
 	{
-		"name": "Eldritch Blast",
-		"type": "cantrip",
-		"tags": [
-			"warlock"
-		]
+		name: "Comprehend Languages",
+		type: "level1spell",
+		tags: ["bard", "sorcerer", "warlock", "wizard"]
 	},
 	{
-		"name": "Elementalism",
-		"type": "cantrip",
-		"tags": [
-			"druid",
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
+		name: "Create or Destroy Water",
+		type: "level1spell",
+		tags: ["cleric", "druid"]
 	},
 	{
-		"name": "Ensnaring Strike",
-		"type": "level1spell",
-		"tags": [
-			"ranger"
-		]
+		name: "Cure Wounds",
+		type: "level1spell",
+		tags: ["bard", "cleric", "druid", "paladin", "ranger"]
 	},
 	{
-		"name": "Entangle",
-		"type": "level1spell",
-		"tags": [
-			"druid",
-			"ranger"
-		]
+		name: "Dancing Lights",
+		type: "cantrip",
+		tags: ["astralElf", "bard", "koboldSorcery", "sorcerer", "wizard"]
 	},
 	{
-		"name": "Expeditious Retreat",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
+		name: "Detect Evil and Good",
+		type: "level1spell",
+		tags: ["cleric", "paladin"]
 	},
 	{
-		"name": "Faerie Fire",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"druid"
-		]
+		name: "Detect Magic",
+		type: "level1spell",
+		tags: ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"]
 	},
 	{
-		"name": "False Life",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"wizard"
-		]
+		name: "Detect Poison and Disease",
+		type: "level1spell",
+		tags: ["cleric", "druid", "paladin", "ranger"]
 	},
 	{
-		"name": "Feather Fall",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"sorcerer",
-			"wizard"
-		]
+		name: "Disguise Self",
+		type: "level1spell",
+		tags: ["bard", "sorcerer", "wizard"]
 	},
 	{
-		"name": "Find Familiar",
-		"type": "level1spell",
-		"tags": [
-			"wizard"
-		]
+		name: "Dissonant Whispers",
+		type: "level1spell",
+		tags: ["bard"]
 	},
 	{
-		"name": "Fire Bolt",
-		"type": "cantrip",
-		"tags": [
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
+		name: "Divine Favor",
+		type: "level1spell",
+		tags: ["paladin"]
 	},
 	{
-		"name": "Fog Cloud",
-		"type": "level1spell",
-		"tags": [
-			"druid",
-			"ranger",
-			"sorcerer",
-			"wizard"
-		]
+		name: "Divine Smite",
+		type: "level1spell",
+		tags: ["paladin"]
 	},
 	{
-		"name": "Friends",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
+		name: "Druidcraft",
+		type: "cantrip",
+		tags: ["druid"]
 	},
 	{
-		"name": "Goodberry",
-		"type": "level1spell",
-		"tags": [
-			"druid",
-			"ranger"
-		]
+		name: "Eldritch Blast",
+		type: "cantrip",
+		tags: ["warlock"]
 	},
 	{
-		"name": "Grease",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"wizard"
-		]
+		name: "Elementalism",
+		type: "cantrip",
+		tags: ["druid", "koboldSorcery", "sorcerer", "wizard"]
 	},
 	{
-		"name": "Guidance",
-		"type": "cantrip",
-		"tags": [
-			"cleric",
-			"druid"
-		]
+		name: "Ensnaring Strike",
+		type: "level1spell",
+		tags: ["ranger"]
 	},
 	{
-		"name": "Guiding Bolt",
-		"type": "level1spell",
-		"tags": [
-			"cleric"
-		]
+		name: "Entangle",
+		type: "level1spell",
+		tags: ["druid", "ranger"]
 	},
 	{
-		"name": "Hail of Thorns",
-		"type": "level1spell",
-		"tags": [
-			"ranger"
-		]
+		name: "Expeditious Retreat",
+		type: "level1spell",
+		tags: ["sorcerer", "warlock", "wizard"]
 	},
 	{
-		"name": "Healing Word",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"cleric",
-			"druid"
-		]
+		name: "Faerie Fire",
+		type: "level1spell",
+		tags: ["bard", "druid"]
 	},
 	{
-		"name": "Hellish Rebuke",
-		"type": "level1spell",
-		"tags": [
-			"warlock"
-		]
+		name: "False Life",
+		type: "level1spell",
+		tags: ["sorcerer", "wizard"]
 	},
 	{
-		"name": "Heroism",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"paladin"
-		]
+		name: "Feather Fall",
+		type: "level1spell",
+		tags: ["bard", "sorcerer", "wizard"]
 	},
 	{
-		"name": "Hex",
-		"type": "level1spell",
-		"tags": [
-			"warlock"
-		]
+		name: "Find Familiar",
+		type: "level1spell",
+		tags: ["wizard"]
 	},
 	{
-		"name": "Hunter's Mark",
-		"type": "level1spell",
-		"tags": [
-			"ranger"
-		]
-	},
-	{
-		"name": "Ice Knife",
-		"type": "level1spell",
-		"tags": [
-			"druid",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Identify",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"wizard"
-		]
-	},
-	{
-		"name": "Illusory Script",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Inflict Wounds",
-		"type": "level1spell",
-		"tags": [
-			"cleric"
-		]
-	},
-	{
-		"name": "Jump",
-		"type": "level1spell",
-		"tags": [
-			"druid",
-			"ranger",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Light",
-		"type": "cantrip",
-		"tags": [
-			"astralElf",
-			"bard",
-			"cleric",
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Longstrider",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"druid",
-			"ranger",
-			"wizard"
-		]
-	},
-	{
-		"name": "Mage Armor",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Mage Hand",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Magic Missile",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Mending",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"cleric",
-			"druid",
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Message",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"druid",
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Mind Sliver",
-		"type": "cantrip",
-		"tags": [
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Minor Illusion",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Poison Spray",
-		"type": "cantrip",
-		"tags": [
-			"druid",
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Prestidigitation",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Produce Flame",
-		"type": "cantrip",
-		"tags": [
-			"druid"
-		]
-	},
-	{
-		"name": "Protection from Evil and Good",
-		"type": "level1spell",
-		"tags": [
-			"cleric",
-			"druid",
-			"paladin",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Purify Food and Drink",
-		"type": "level1spell",
-		"tags": [
-			"cleric",
-			"druid",
-			"paladin"
-		]
-	},
-	{
-		"name": "Ray of Frost",
-		"type": "cantrip",
-		"tags": [
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Ray of Sickness",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Resistance",
-		"type": "cantrip",
-		"tags": [
-			"cleric",
-			"druid"
-		]
-	},
-	{
-		"name": "Sacred Flame",
-		"type": "cantrip",
-		"tags": [
-			"astralElf",
-			"cleric"
-		]
-	},
-	{
-		"name": "Sanctuary",
-		"type": "level1spell",
-		"tags": [
-			"cleric"
-		]
-	},
-	{
-		"name": "Searing Smite",
-		"type": "level1spell",
-		"tags": [
-			"paladin"
-		]
-	},
-	{
-		"name": "Shield",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Shield of Faith",
-		"type": "level1spell",
-		"tags": [
-			"cleric",
-			"paladin"
-		]
-	},
-	{
-		"name": "Shillelagh",
-		"type": "cantrip",
-		"tags": [
-			"druid"
-		]
-	},
-	{
-		"name": "Shocking Grasp",
-		"type": "cantrip",
-		"tags": [
-			"koboldSorcery",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Silent Image",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Sleep",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Sorcerous Burst",
-		"type": "cantrip",
-		"tags": [
-			"koboldSorcery",
-			"sorcerer"
-		]
-	},
-	{
-		"name": "Spare the Dying",
-		"type": "cantrip",
-		"tags": [
-			"cleric",
-			"druid"
-		]
-	},
-	{
-		"name": "Speak with Animals",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"druid",
-			"ranger",
-			"warlock"
-		]
-	},
-	{
-		"name": "Starry Wisp",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"druid"
-		]
-	},
-	{
-		"name": "Tasha's Hideous Laughter",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Tenser's Floating Disk",
-		"type": "level1spell",
-		"tags": [
-			"wizard"
-		]
-	},
-	{
-		"name": "Thaumaturgy",
-		"type": "cantrip",
-		"tags": [
-			"cleric"
-		]
-	},
-	{
-		"name": "Thorn Whip",
-		"type": "cantrip",
-		"tags": [
-			"druid"
-		]
-	},
-	{
-		"name": "Thunderclap",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"druid",
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Thunderous Smite",
-		"type": "level1spell",
-		"tags": [
-			"paladin"
-		]
-	},
-	{
-		"name": "Thunderwave",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"druid",
-			"sorcerer",
-			"wizard"
-		]
-	},
-	{
-		"name": "Toll the Dead",
-		"type": "cantrip",
-		"tags": [
-			"cleric",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "True Strike",
-		"type": "cantrip",
-		"tags": [
-			"bard",
-			"koboldSorcery",
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Unseen Servant",
-		"type": "level1spell",
-		"tags": [
-			"bard",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Vicious Mockery",
-		"type": "cantrip",
-		"tags": [
-			"bard"
-		]
-	},
-	{
-		"name": "Witch Bolt",
-		"type": "level1spell",
-		"tags": [
-			"sorcerer",
-			"warlock",
-			"wizard"
-		]
-	},
-	{
-		"name": "Word of Radiance",
-		"type": "cantrip",
-		"tags": [
-			"cleric"
-		]
-	},
-	{
-		"name": "Wrathful Smite",
-		"type": "level1spell",
-		"tags": [
-			"paladin"
-		]
+		name: "Fire Bolt",
+		type: "cantrip",
+		tags: ["koboldSorcery", "sorcerer", "wizard"]
+	},
+	{
+		name: "Fog Cloud",
+		type: "level1spell",
+		tags: ["druid", "ranger", "sorcerer", "wizard"]
+	},
+	{
+		name: "Friends",
+		type: "cantrip",
+		tags: ["bard", "koboldSorcery", "sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Goodberry",
+		type: "level1spell",
+		tags: ["druid", "ranger"]
+	},
+	{
+		name: "Grease",
+		type: "level1spell",
+		tags: ["sorcerer", "wizard"]
+	},
+	{
+		name: "Guidance",
+		type: "cantrip",
+		tags: ["cleric", "druid"]
+	},
+	{
+		name: "Guiding Bolt",
+		type: "level1spell",
+		tags: ["cleric"]
+	},
+	{
+		name: "Hail of Thorns",
+		type: "level1spell",
+		tags: ["ranger"]
+	},
+	{
+		name: "Healing Word",
+		type: "level1spell",
+		tags: ["bard", "cleric", "druid"]
+	},
+	{
+		name: "Hellish Rebuke",
+		type: "level1spell",
+		tags: ["warlock"]
+	},
+	{
+		name: "Heroism",
+		type: "level1spell",
+		tags: ["bard", "paladin"]
+	},
+	{
+		name: "Hex",
+		type: "level1spell",
+		tags: ["warlock"]
+	},
+	{
+		name: "Hunter's Mark",
+		type: "level1spell",
+		tags: ["ranger"]
+	},
+	{
+		name: "Ice Knife",
+		type: "level1spell",
+		tags: ["druid", "sorcerer", "wizard"]
+	},
+	{
+		name: "Identify",
+		type: "level1spell",
+		tags: ["bard", "wizard"]
+	},
+	{
+		name: "Illusory Script",
+		type: "level1spell",
+		tags: ["bard", "warlock", "wizard"]
+	},
+	{
+		name: "Inflict Wounds",
+		type: "level1spell",
+		tags: ["cleric"]
+	},
+	{
+		name: "Jump",
+		type: "level1spell",
+		tags: ["druid", "ranger", "sorcerer", "wizard"]
+	},
+	{
+		name: "Light",
+		type: "cantrip",
+		tags: ["astralElf", "bard", "cleric", "koboldSorcery", "sorcerer", "wizard"]
+	},
+	{
+		name: "Longstrider",
+		type: "level1spell",
+		tags: ["bard", "druid", "ranger", "wizard"]
+	},
+	{
+		name: "Mage Armor",
+		type: "level1spell",
+		tags: ["sorcerer", "wizard"]
+	},
+	{
+		name: "Mage Hand",
+		type: "cantrip",
+		tags: ["bard", "koboldSorcery", "sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Magic Missile",
+		type: "level1spell",
+		tags: ["sorcerer", "wizard"]
+	},
+	{
+		name: "Mending",
+		type: "cantrip",
+		tags: ["bard", "cleric", "druid", "koboldSorcery", "sorcerer", "wizard"]
+	},
+	{
+		name: "Message",
+		type: "cantrip",
+		tags: ["bard", "druid", "koboldSorcery", "sorcerer", "wizard"]
+	},
+	{
+		name: "Mind Sliver",
+		type: "cantrip",
+		tags: ["koboldSorcery", "sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Minor Illusion",
+		type: "cantrip",
+		tags: ["bard", "koboldSorcery", "sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Poison Spray",
+		type: "cantrip",
+		tags: ["druid", "koboldSorcery", "sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Prestidigitation",
+		type: "cantrip",
+		tags: ["bard", "koboldSorcery", "sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Produce Flame",
+		type: "cantrip",
+		tags: ["druid"]
+	},
+	{
+		name: "Protection from Evil and Good",
+		type: "level1spell",
+		tags: ["cleric", "druid", "paladin", "warlock", "wizard"]
+	},
+	{
+		name: "Purify Food and Drink",
+		type: "level1spell",
+		tags: ["cleric", "druid", "paladin"]
+	},
+	{
+		name: "Ray of Frost",
+		type: "cantrip",
+		tags: ["koboldSorcery", "sorcerer", "wizard"]
+	},
+	{
+		name: "Ray of Sickness",
+		type: "level1spell",
+		tags: ["sorcerer", "wizard"]
+	},
+	{
+		name: "Resistance",
+		type: "cantrip",
+		tags: ["cleric", "druid"]
+	},
+	{
+		name: "Sacred Flame",
+		type: "cantrip",
+		tags: ["astralElf", "cleric"]
+	},
+	{
+		name: "Sanctuary",
+		type: "level1spell",
+		tags: ["cleric"]
+	},
+	{
+		name: "Searing Smite",
+		type: "level1spell",
+		tags: ["paladin"]
+	},
+	{
+		name: "Shield",
+		type: "level1spell",
+		tags: ["sorcerer", "wizard"]
+	},
+	{
+		name: "Shield of Faith",
+		type: "level1spell",
+		tags: ["cleric", "paladin"]
+	},
+	{
+		name: "Shillelagh",
+		type: "cantrip",
+		tags: ["druid"]
+	},
+	{
+		name: "Shocking Grasp",
+		type: "cantrip",
+		tags: ["koboldSorcery", "sorcerer", "wizard"]
+	},
+	{
+		name: "Silent Image",
+		type: "level1spell",
+		tags: ["bard", "sorcerer", "wizard"]
+	},
+	{
+		name: "Sleep",
+		type: "level1spell",
+		tags: ["bard", "sorcerer", "wizard"]
+	},
+	{
+		name: "Sorcerous Burst",
+		type: "cantrip",
+		tags: ["koboldSorcery", "sorcerer"]
+	},
+	{
+		name: "Spare the Dying",
+		type: "cantrip",
+		tags: ["cleric", "druid"]
+	},
+	{
+		name: "Speak with Animals",
+		type: "level1spell",
+		tags: ["bard", "druid", "ranger", "warlock"]
+	},
+	{
+		name: "Starry Wisp",
+		type: "cantrip",
+		tags: ["bard", "druid"]
+	},
+	{
+		name: "Tasha's Hideous Laughter",
+		type: "level1spell",
+		tags: ["bard", "warlock", "wizard"]
+	},
+	{
+		name: "Tenser's Floating Disk",
+		type: "level1spell",
+		tags: ["wizard"]
+	},
+	{
+		name: "Thaumaturgy",
+		type: "cantrip",
+		tags: ["cleric"]
+	},
+	{
+		name: "Thorn Whip",
+		type: "cantrip",
+		tags: ["druid"]
+	},
+	{
+		name: "Thunderclap",
+		type: "cantrip",
+		tags: ["bard", "druid", "koboldSorcery", "sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Thunderous Smite",
+		type: "level1spell",
+		tags: ["paladin"]
+	},
+	{
+		name: "Thunderwave",
+		type: "level1spell",
+		tags: ["bard", "druid", "sorcerer", "wizard"]
+	},
+	{
+		name: "Toll the Dead",
+		type: "cantrip",
+		tags: ["cleric", "warlock", "wizard"]
+	},
+	{
+		name: "True Strike",
+		type: "cantrip",
+		tags: ["bard", "koboldSorcery", "sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Unseen Servant",
+		type: "level1spell",
+		tags: ["bard", "warlock", "wizard"]
+	},
+	{
+		name: "Vicious Mockery",
+		type: "cantrip",
+		tags: ["bard"]
+	},
+	{
+		name: "Witch Bolt",
+		type: "level1spell",
+		tags: ["sorcerer", "warlock", "wizard"]
+	},
+	{
+		name: "Word of Radiance",
+		type: "cantrip",
+		tags: ["cleric"]
+	},
+	{
+		name: "Wrathful Smite",
+		type: "level1spell",
+		tags: ["paladin"]
 	}
 ];
 
 const BACKGROUNDS = {
 	"Acolyte": {
-		"fixed": [
-			"Insight",
-			"Religion",
-			"Calligrapher's Supplies"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Insight", "Religion", "Calligrapher's Supplies"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Magic Initiate",
-		"magicInitiate": {
-			"lists": [
-				"Cleric"
-			]
+		originFeat: "Magic Initiate",
+		magicInitiate: {
+			lists: ["Cleric"]
 		}
 	},
 	"Artisan": {
-		"fixed": [
-			"Investigation",
-			"Persuasion"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Investigation", "Persuasion"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"artisanTool"
-						]
-					}
-				}
+				count: 1,
+				all: ["artisanTool"]
 			}
 		],
-		"originFeat": "Crafter"
+		originFeat: "Crafter"
 	},
 	"Charlatan": {
-		"fixed": [
-			"Deception",
-			"Sleight of Hand",
-			"Forgery Kit"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Deception", "Sleight of Hand", "Forgery Kit"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Skilled"
+		originFeat: "Skilled"
 	},
 	"Criminal": {
-		"fixed": [
-			"Stealth",
-			"Sleight of Hand",
-			"Thieves' Tools"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Stealth", "Sleight of Hand", "Thieves' Tools"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Alert"
+		originFeat: "Alert"
 	},
 	"Entertainer": {
-		"fixed": [
-			"Acrobatics",
-			"Performance"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Acrobatics", "Performance"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"instrument"
-						]
-					}
-				}
+				count: 1,
+				all: ["instrument"]
 			}
 		],
-		"originFeat": "Musician"
+		originFeat: "Musician"
 	},
 	"Farmer": {
-		"fixed": [
-			"Animal Handling",
-			"Nature",
-			"Carpenter's Tools"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Animal Handling", "Nature", "Carpenter's Tools"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Tough"
+		originFeat: "Tough"
 	},
 	"Guard": {
-		"fixed": [
-			"Athletics",
-			"Perception"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Athletics", "Perception"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"gamingSet"
-						]
-					}
-				}
+				count: 1,
+				all: ["gamingSet"]
 			}
 		],
-		"originFeat": "Alert"
+		originFeat: "Alert"
 	},
 	"Guide": {
-		"fixed": [
-			"Stealth",
-			"Survival",
-			"Cartographer's Tools"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Stealth", "Survival", "Cartographer's Tools"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Magic Initiate",
-		"magicInitiate": {
-			"lists": [
-				"Druid"
-			]
+		originFeat: "Magic Initiate",
+		magicInitiate: {
+			lists: ["Druid"]
 		}
 	},
 	"Hermit": {
-		"fixed": [
-			"Medicine",
-			"Religion",
-			"Herbalism Kit"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Medicine", "Religion", "Herbalism Kit"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Healer"
+		originFeat: "Healer"
 	},
 	"Merchant": {
-		"fixed": [
-			"Animal Handling",
-			"Persuasion",
-			"Navigator's Tools"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Animal Handling", "Persuasion", "Navigator's Tools"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Lucky"
+		originFeat: "Lucky"
 	},
 	"Noble": {
-		"fixed": [
-			"History",
-			"Persuasion"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["History", "Persuasion"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"gamingSet"
-						]
-					}
-				}
+				count: 1,
+				all: ["gamingSet"]
 			}
 		],
-		"originFeat": "Skilled"
+		originFeat: "Skilled"
 	},
 	"Sage": {
-		"fixed": [
-			"Arcana",
-			"History",
-			"Calligrapher's Supplies"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Arcana", "History", "Calligrapher's Supplies"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Magic Initiate",
-		"magicInitiate": {
-			"lists": [
-				"Wizard"
-			]
+		originFeat: "Magic Initiate",
+		magicInitiate: {
+			lists: ["Wizard"]
 		}
 	},
 	"Sailor": {
-		"fixed": [
-			"Acrobatics",
-			"Perception",
-			"Navigator's Tools"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Acrobatics", "Perception", "Navigator's Tools"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Tavern Brawler"
+		originFeat: "Tavern Brawler"
 	},
 	"Scribe": {
-		"fixed": [
-			"Investigation",
-			"Perception",
-			"Calligrapher's Supplies"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Investigation", "Perception", "Calligrapher's Supplies"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Skilled"
+		originFeat: "Skilled"
 	},
 	"Soldier": {
-		"fixed": [
-			"Athletics",
-			"Intimidation"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Athletics", "Intimidation"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"gamingSet"
-						]
-					}
-				}
+				count: 1,
+				all: ["gamingSet"]
 			}
 		],
-		"originFeat": "Savage Attacker"
+		originFeat: "Savage Attacker"
 	},
 	"Wayfarer": {
-		"fixed": [
-			"Insight",
-			"Stealth",
-			"Thieves' Tools"
-		],
-		"modifiers": {
-			"startingEquipment": 2,
-			"abilityScores": 7
+		fixed: ["Insight", "Stealth", "Thieves' Tools"],
+		modifiers: {
+			startingEquipment: 2,
+			abilityScores: 7
 		},
-		"originFeat": "Lucky"
+		originFeat: "Lucky"
 	}
 };
 
 const RACES = {
 	"Aarakocra": {},
 	"Aasimar": {
-		"fixed": [
-			"Light"
-		],
-		"modifiers": {
-			"size": 2
+		fixed: ["Light"],
+		modifiers: {
+			size: 2
 		}
 	},
 	"Astral Elf": {
-		"fixed": [
-			"Perception"
-		],
-		"modifiers": {
-			"spellcastingAbility": 3
+		fixed: ["Perception"],
+		modifiers: {
+			spellcastingAbility: 3
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "cantrip",
-					"tags": {
-						"all": [
-							"astralElf"
-						]
-					}
-				}
+				count: 1,
+				all: ["cantrip", "astralElf"]
 			}
 		]
 	},
 	"Autognome": {
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill"]
 			}
 		]
 	},
 	"Bugbear": {
-		"choices": [
-			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"bugbear"
-						]
-					}
-				}
-			}
-		]
+		fixed: ["Stealth"]
 	},
 	"Centaur": {
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"centaur"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill", "centaur"]
 			}
 		]
 	},
 	"Changeling": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"changeling"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill", "changeling"]
 			}
 		]
 	},
 	"Deep Gnome": {},
 	"Dhampir": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill"]
 			}
 		]
 	},
 	"Gnome": {
-		"dynamic": {
-			"choiceBranches": [
-				{
-					"name": "Forest",
-					"modifiers": {
-						"spellcastingAbility": 3
-					},
-					"fixed": [
-						"Minor Illusion",
-						"Speak with Animals"
-					]
-				},
-				{
-					"name": "Rock",
-					"modifiers": {
-						"spellcastingAbility": 3
-					},
-					"fixed": [
-						"Mending",
-						"Prestidigitation"
-					]
-				}
-			]
-		}
+		modifiers: {
+			spellcastingAbility: 3
+		},
+		branches: [
+			{
+				name: "Forest",
+				fixed: ["Minor Illusion", "Speak with Animals"]
+			},
+			{
+				name: "Rock",
+				fixed: ["Mending", "Prestidigitation"]
+			}
+		]
 	},
 	"Dragonborn": {
-		"modifiers": {
-			"subtype": 10
+		modifiers: {
+			subtype: 10
 		}
 	},
 	"Duergar": {},
 	"Dwarf": {},
 	"Eladrin": {
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"eladrin"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill", "eladrin"]
 			}
 		]
 	},
 	"Elf": {
-		"modifiers": {
-			"spellcastingAbility": 3
+		modifiers: {
+			spellcastingAbility: 3
 		},
-		"dynamic": {
-			"choiceBranches": [
-				{
-					"name": "Drow",
-					"fixed": [
-						"Dancing Lights"
-					],
-					"choices": [
-						{
-							"count": 1,
-							"from": {
-								"type": "proficiency",
-								"tags": {
-									"all": [
-										"skill",
-										"elfDrow"
-									]
-								}
-							}
-						}
-					]
-				},
-				{
-					"name": "High",
-					"fixed": [
-						"Prestidigitation"
-					],
-					"choices": [
-						{
-							"count": 1,
-							"from": {
-								"type": "proficiency",
-								"tags": {
-									"all": [
-										"skill",
-										"elfHigh"
-									]
-								}
-							}
-						}
-					]
-				},
-				{
-					"name": "Wood",
-					"fixed": [
-						"Druidcraft"
-					],
-					"choices": [
-						{
-							"count": 1,
-							"from": {
-								"type": "proficiency",
-								"tags": {
-									"all": [
-										"skill",
-										"elfWood"
-									]
-								}
-							}
-						}
-					]
-				}
-			]
-		}
+		branches: [
+			{
+				name: "Drow",
+				fixed: ["Dancing Lights"],
+				choices: [
+					{
+						count: 1,
+						all: ["skill", "elfDrow"]
+					}
+				]
+			},
+			{
+				name: "High",
+				fixed: ["Prestidigitation"],
+				choices: [
+					{
+						count: 1,
+						all: ["skill", "elfHigh"]
+					}
+				]
+			},
+			{
+				name: "Wood",
+				fixed: ["Druidcraft"],
+				choices: [
+					{
+						count: 1,
+						all: ["skill", "elfWood"]
+					}
+				]
+			}
+		]
 	},
 	"Fairy": {
-		"fixed": [
-			"Druidcraft"
-		],
-		"modifiers": {
-			"spellcastingAbility": 3
+		fixed: ["Druidcraft"],
+		modifiers: {
+			spellcastingAbility: 3
 		}
 	},
 	"Firbolg": {
-		"fixed": [
-			"Detect Magic",
-			"Disguise Self"
-		],
-		"modifiers": {
-			"spellcastingAbility": 3
+		fixed: ["Detect Magic", "Disguise Self"],
+		modifiers: {
+			spellcastingAbility: 3
 		}
 	},
 	"Genasi": {
-		"modifiers": {
-			"size": 2,
-			"spellcastingAbility": 3
+		modifiers: {
+			size: 2,
+			spellcastingAbility: 3
 		},
-		"dynamic": {
-			"choiceBranches": [
-				{
-					"name": "Air",
-					"fixed": [
-						"Shocking Grasp"
-					]
-				},
-				{
-					"name": "Earth",
-					"fixed": [
-						"Blade Ward"
-					]
-				},
-				{
-					"name": "Fire",
-					"fixed": [
-						"Produce Flame"
-					]
-				},
-				{
-					"name": "Water",
-					"fixed": [
-						"Acid Splash"
-					]
-				}
-			]
-		}
+		branches: [
+			{
+				name: "Air",
+				fixed: ["Shocking Grasp"]
+			},
+			{
+				name: "Earth",
+				fixed: ["Blade Ward"]
+			},
+			{
+				name: "Fire",
+				fixed: ["Produce Flame"]
+			},
+			{
+				name: "Water",
+				fixed: ["Acid Splash"]
+			}
+		]
 	},
 	"Githyanki": {
-		"fixed": [
-			"Mage Hand"
-		],
-		"modifiers": {
-			"spellcastingAbility": 3
+		fixed: ["Mage Hand"],
+		modifiers: {
+			spellcastingAbility: 3
 		}
 	},
 	"Githzerai": {
-		"fixed": [
-			"Mage Hand"
-		],
-		"modifiers": {
-			"spellcastingAbility": 3
+		fixed: ["Mage Hand"],
+		modifiers: {
+			spellcastingAbility: 3
 		}
 	},
 	"Giff": {},
 	"Goblin": {},
 	"Goliath": {
-		"modifiers": {
-			"subtype": 6
+		modifiers: {
+			subtype: 6
 		}
 	},
 	"Hadozee": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		}
 	},
 	"Halfling": {},
 	"Harengon": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"harengon"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill", "harengon"]
 			}
 		]
 	},
 	"Hexblood": {
-		"fixed": [
-			"Disguise Self",
-			"Hex"
-		],
-		"modifiers": {
-			"size": 2,
-			"spellcastingAbility": 3
+		fixed: ["Disguise Self", "Hex"],
+		modifiers: {
+			size: 2,
+			spellcastingAbility: 3
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill"]
 			}
 		]
 	},
 	"Hobgoblin": {},
 	"Human": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"skill"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill"]
 			}
 		],
-		"dynamic": {
-			"originFeatChoice": {
-				"options": [
-					"Alert",
-					"Crafter",
-					"Healer",
-					"Lucky",
-					"Magic Initiate",
-					"Musician",
-					"Savage Attacker",
-					"Skilled",
-					"Tavern Brawler",
-					"Tough"
-				],
-				"skilledOption": "Skilled",
-				"musicianOption": "Musician",
-				"crafterOption": "Crafter",
-				"magicInitiateOption": "Magic Initiate"
-			}
+		originFeatChoice: {
+			options: [
+				"Alert",
+				"Crafter",
+				"Healer",
+				"Lucky",
+				"Magic Initiate",
+				"Musician",
+				"Savage Attacker",
+				"Skilled",
+				"Tavern Brawler",
+				"Tough"
+			]
 		}
 	},
 	"Kalashtar": {},
 	"Kender": {
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"kender"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill", "kender"]
 			}
 		]
 	},
 	"Kenku": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"skill"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill"]
 			}
 		]
 	},
 	"Khoravar": {
-		"fixed": [
-			"Friends"
-		],
-		"modifiers": {
-			"size": 2,
-			"spellcastingAbility": 3
+		fixed: ["Friends"],
+		modifiers: {
+			size: 2,
+			spellcastingAbility: 3
 		}
 	},
 	"Kobold": {
-		"dynamic": {
-			"choiceBranches": [
-				{
-					"name": "Craftiness",
-					"choices": [
-						{
-							"count": 1,
-							"from": {
-								"type": "proficiency",
-								"tags": {
-									"all": [
-										"skill",
-										"koboldCraftiness"
-									]
-								}
-							}
-						}
-					]
+		branches: [
+			{
+				name: "Craftiness",
+				choices: [
+					{
+						count: 1,
+						all: ["skill", "koboldCraftiness"]
+					}
+				]
+			},
+			{
+				name: "Defiance"
+			},
+			{
+				name: "Sorcery",
+				modifiers: {
+					spellcastingAbility: 3
 				},
-				{
-					"name": "Defiance"
-				},
-				{
-					"name": "Sorcery",
-					"modifiers": {
-						"spellcastingAbility": 3
-					},
-					"choices": [
-						{
-							"count": 1,
-							"from": {
-								"type": "cantrip",
-								"tags": {
-									"all": [
-										"koboldSorcery"
-									]
-								}
-							}
-						}
-					]
-				}
-			]
-		}
+				choices: [
+					{
+						count: 1,
+						all: ["cantrip", "koboldSorcery"]
+					}
+				]
+			}
+		]
 	},
 	"Lizardfolk": {
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"lizardfolk"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill", "lizardfolk"]
 			}
 		]
 	},
 	"Locathah": {
-		"fixed": [
-			"Athletics",
-			"Perception"
-		]
+		fixed: ["Athletics", "Perception"]
 	},
 	"Loxodon": {},
 	"Leonin": {},
 	"Minotaur": {},
 	"Orc": {},
+	"Owlin": {
+		fixed: ["Stealth"],
+		modifiers: {
+			size: 2
+		}
+	},
 	"Plasmoid": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		}
 	},
 	"Reborn": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill"]
 			}
 		]
 	},
 	"Satyr": {
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"satyr"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill", "satyr"]
 			},
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"instrument"
-						]
-					}
-				}
+				count: 1,
+				all: ["instrument"]
 			}
 		]
 	},
 	"SeaElf": {
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"seaElf"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill", "seaElf"]
 			}
 		]
 	},
 	"ShadarKai": {
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"shadarKai"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill", "shadarKai"]
 			}
 		]
 	},
 	"Shifter": {
-		"modifiers": {
-			"subtype": 4
+		modifiers: {
+			subtype: 4
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"shifter"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill", "shifter"]
 			}
 		]
 	},
 	"Simic Hybrid": {
-		"modifiers": {
-			"subtype": 3
+		modifiers: {
+			subtype: 3
 		}
 	},
 	"Tabaxi": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"tabaxi"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill", "tabaxi"]
 			}
 		]
 	},
 	"Thri-kreen": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		}
 	},
 	"Tiefling": {
-		"fixed": [
-			"Thaumaturgy"
-		],
-		"modifiers": {
-			"size": 2
+		fixed: ["Thaumaturgy"],
+		modifiers: {
+			size: 2,
+			spellcastingAbility: 3
 		},
-		"dynamic": {
-			"choiceBranches": [
-				{
-					"name": "Abyssal",
-					"modifiers": {
-						"spellcastingAbility": 3
-					},
-					"fixed": [
-						"Poison Spray"
-					]
-				},
-				{
-					"name": "Chthonic",
-					"modifiers": {
-						"spellcastingAbility": 3
-					},
-					"fixed": [
-						"Chill Touch"
-					]
-				},
-				{
-					"name": "Infernal",
-					"modifiers": {
-						"spellcastingAbility": 3
-					},
-					"fixed": [
-						"Fire Bolt"
-					]
-				}
-			]
-		}
+		branches: [
+			{
+				name: "Abyssal",
+				fixed: ["Poison Spray"]
+			},
+			{
+				name: "Chthonic",
+				fixed: ["Chill Touch"]
+			},
+			{
+				name: "Infernal",
+				fixed: ["Fire Bolt"]
+			}
+		]
 	},
 	"Tortle": {
-		"modifiers": {
-			"size": 2
+		modifiers: {
+			size: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"tortle"
-						]
-					}
-				}
+				count: 2,
+				all: ["skill", "tortle"]
 			}
 		]
 	},
 	"Triton": {
-		"fixed": [
-			"Fog Cloud"
-		],
-		"modifiers": {
-			"spellcastingAbility": 3
+		fixed: ["Fog Cloud"],
+		modifiers: {
+			spellcastingAbility: 3
 		}
 	},
 	"Vedalken": {
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill",
-							"vedalken"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill", "vedalken"]
 			},
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"tool"
-						]
-					}
-				}
+				count: 1,
+				all: ["tool"]
 			}
 		]
 	},
 	"Verdan": {
-		"fixed": [
-			"Persuasion"
-		]
+		fixed: ["Persuasion"]
 	},
 	"Warforged": {
-		"choices": [
+		choices: [
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"skill"
-						]
-					}
-				}
+				count: 1,
+				all: ["skill"]
 			},
 			{
-				"count": 1,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"tool"
-						]
-					}
-				}
+				count: 1,
+				all: ["tool"]
 			}
 		]
 	},
 	"Yuan-ti": {
-		"fixed": [
-			"Poison Spray"
-		],
-		"modifiers": {
-			"size": 2,
-			"spellcastingAbility": 3
+		fixed: ["Poison Spray"],
+		modifiers: {
+			size: 2,
+			spellcastingAbility: 3
 		}
 	}
 };
 
 const CLASSES = {
 	"Barbarian": {
-		"modifiers": {
-			"startingEquipment": 2
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"barbarian"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "barbarian"]
 			}
 		]
 	},
 	"Bard": {
-		"modifiers": {
-			"startingEquipment": 2
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 3,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"skill"
-						]
-					}
-				}
+				count: 3,
+				all: ["skill"]
 			},
 			{
-				"count": 3,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"instrument"
-						]
-					}
-				}
+				count: 3,
+				all: ["instrument"]
 			},
 			{
-				"count": 2,
-				"from": {
-					"type": "cantrip",
-					"tags": {
-						"all": [
-							"bard"
-						]
-					}
-				}
+				count: 2,
+				all: ["cantrip", "bard"]
 			},
 			{
-				"count": 4,
-				"from": {
-					"type": "level1spell",
-					"tags": {
-						"all": [
-							"bard"
-						]
-					}
-				}
+				count: 4,
+				all: ["level1spell", "bard"]
 			}
 		]
 	},
 	"Cleric": {
-		"modifiers": {
-			"startingEquipment": 2
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"cleric"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "cleric"]
 			},
 			{
-				"count": 3,
-				"from": {
-					"type": "cantrip",
-					"tags": {
-						"all": [
-							"cleric"
-						]
-					}
-				}
+				count: 3,
+				all: ["cantrip", "cleric"]
 			},
 			{
-				"count": 4,
-				"from": {
-					"type": "level1spell",
-					"tags": {
-						"all": [
-							"cleric"
-						]
-					}
-				}
+				count: 4,
+				all: ["level1spell", "cleric"]
 			}
 		],
-		"dynamic": {
-			"spellChoiceBranches": [
-				{
-					"name": "Protector Order"
-				},
-				{
-					"name": "Thaumaturge Order",
-					"extraCantrips": {
-						"count": 1
-					}
+		branches: [
+			{
+				name: "Protector Order"
+			},
+			{
+				name: "Thaumaturge Order",
+				extraCantrips: {
+					count: 1
 				}
-			]
-		}
+			}
+		]
 	},
 	"Druid": {
-		"fixed": [
-			"Herbalism Kit",
-			"Speak with Animals"
-		],
-		"modifiers": {
-			"startingEquipment": 2
+		fixed: ["Herbalism Kit", "Speak with Animals"],
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"druid"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "druid"]
 			},
 			{
-				"count": 2,
-				"from": {
-					"type": "cantrip",
-					"tags": {
-						"all": [
-							"druid"
-						]
-					}
-				}
+				count: 2,
+				all: ["cantrip", "druid"]
 			},
 			{
-				"count": 4,
-				"from": {
-					"type": "level1spell",
-					"tags": {
-						"all": [
-							"druid"
-						]
-					}
-				}
+				count: 4,
+				all: ["level1spell", "druid"]
 			}
 		],
-		"dynamic": {
-			"spellChoiceBranches": [
-				{
-					"name": "Warden Order"
-				},
-				{
-					"name": "Magician Order",
-					"extraCantrips": {
-						"count": 1
-					}
+		branches: [
+			{
+				name: "Warden Order"
+			},
+			{
+				name: "Magician Order",
+				extraCantrips: {
+					count: 1
 				}
-			]
-		}
+			}
+		]
 	},
 	"Fighter": {
-		"modifiers": {
-			"startingEquipment": 3,
-			"primaryAbilities": 2,
-			"fightingStyles": 10
+		modifiers: {
+			startingEquipment: 3,
+			primaryAbilities: 2,
+			fightingStyles: 10
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"fighter"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "fighter"]
 			}
 		]
 	},
 	"Monk": {
-		"modifiers": {
-			"startingEquipment": 2
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-							"monk"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "monk"]
 			},
 			{
-				"count": 1,
-				"from": {
-					"tags": {
-						"any": [
-							"artisanTool",
-							"instrument"
-						]
-					}
-				}
+				count: 1,
+				any: ["artisanTool", "instrument"]
 			}
 		]
 	},
 	"Paladin": {
-		"modifiers": {
-			"startingEquipment": 2
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"paladin"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "paladin"]
 			},
 			{
-				"count": 2,
-				"from": {
-					"type": "level1spell",
-					"tags": {
-						"all": [
-							"paladin"
-						]
-					}
-				}
+				count: 2,
+				all: ["level1spell", "paladin"]
 			}
 		]
 	},
 	"Ranger": {
-		"modifiers": {
-			"startingEquipment": 2
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 3,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"ranger"
-						]
-					}
-				}
+				count: 3,
+				all: ["proficiency", "ranger"]
 			},
 			{
-				"count": 2,
-				"from": {
-					"type": "level1spell",
-					"tags": {
-						"all": [
-							"ranger"
-						]
-					}
-				}
+				count: 2,
+				all: ["level1spell", "ranger"]
 			}
 		]
 	},
 	"Rogue": {
-		"modifiers": {
-			"startingEquipment": 2,
-			"languages": 15
+		modifiers: {
+			startingEquipment: 2,
+			languages: 15
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 4,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"rogue"
-						]
-					}
-				}
+				count: 4,
+				all: ["proficiency", "rogue"]
 			}
 		],
-		"dynamic": {
-			"expertise": {
-				"count": 2
-			}
+		expertise: {
+			count: 2
 		}
 	},
 	"Sorcerer": {
-		"modifiers": {
-			"startingEquipment": 2
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"sorcerer"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "sorcerer"]
 			},
 			{
-				"count": 4,
-				"from": {
-					"type": "cantrip",
-					"tags": {
-						"all": [
-							"sorcerer"
-						]
-					}
-				}
+				count: 4,
+				all: ["cantrip", "sorcerer"]
 			},
 			{
-				"count": 2,
-				"from": {
-					"type": "level1spell",
-					"tags": {
-						"all": [
-							"sorcerer"
-						]
-					}
-				}
+				count: 2,
+				all: ["level1spell", "sorcerer"]
 			}
 		]
 	},
 	"Warlock": {
-		"modifiers": {
-			"startingEquipment": 2,
-			"classOrders": 5
+		modifiers: {
+			startingEquipment: 2,
+			classOrders: 5
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"warlock"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "warlock"]
 			},
 			{
-				"count": 2,
-				"from": {
-					"type": "cantrip",
-					"tags": {
-						"all": [
-							"warlock"
-						]
-					}
-				}
+				count: 2,
+				all: ["cantrip", "warlock"]
 			},
 			{
-				"count": 2,
-				"from": {
-					"type": "level1spell",
-					"tags": {
-						"all": [
-							"warlock"
-						]
-					}
-				}
+				count: 2,
+				all: ["level1spell", "warlock"]
 			}
-		],
+		]
 	},
 	"Wizard": {
-		"modifiers": {
-			"startingEquipment": 2
+		modifiers: {
+			startingEquipment: 2
 		},
-		"choices": [
+		choices: [
 			{
-				"count": 2,
-				"from": {
-					"type": "proficiency",
-					"tags": {
-						"all": [
-						"wizard"
-						]
-					}
-				}
+				count: 2,
+				all: ["proficiency", "wizard"]
 			},
 			{
-				"count": 3,
-				"from": {
-					"type": "cantrip",
-					"tags": {
-						"all": [
-							"wizard"
-						]
-					}
-				}
+				count: 3,
+				all: ["cantrip", "wizard"]
 			},
 			{
-				"count": 6,
-				"from": {
-					"type": "level1spell",
-					"tags": {
-						"all": [
-							"wizard"
-						]
-					}
-				}
+				count: 6,
+				all: ["level1spell", "wizard"]
 			}
 		]
 	}
 };
 
 const GLOBALS = {
-	"languageChoices": {
-		"count": 2,
-		"from": {
-			"type": "language",
-			"exclude": [
-				"Common"
-			]
-		}
+	languageChoices: {
+		count: 2,
+		all: ["standardLanguage"],
+		exclude: ["Common"]
 	},
-	"pointBuyWeight": 12282,
-	"rolledAbilityScoreWeight": 16 ** 6
+	pointBuyWeight: 12282,
+	rolledAbilityScoreWeight: 16777216
+};
+const TYPE_PARENTS = {
+	skill: ["proficiency"],
+	instrument: ["tool"],
+	artisanTool: ["tool"],
+	gamingSet: ["tool"],
+	kit: ["tool"],
+	tool: ["proficiency"],
+	standardLanguage: ["language"],
+	rareLanguage: ["language"],
+	originFeat: ["feat"]
 };
 
+function attributeTypes(attribute) {
+	if (!attribute) return [];
+	let directTypes = attribute.types || (attribute.type ? [attribute.type] : []);
+	let out = [];
+	function add(type) {
+		if (out.includes(type)) return;
+		out.push(type);
+		for (let parent of TYPE_PARENTS[type] || []) add(parent);
+	}
+	for (let type of directTypes) add(type);
+	return out;
+}
+
+function attributeHasTag(attribute, tag) {
+	return attributeTypes(attribute).includes(tag) || (attribute.tags || []).includes(tag);
+}
+
+function filterAllTags(filter) {
+	return Array.isArray(filter?.tags) ? filter.tags : filter?.tags?.all || filter?.all || [];
+}
+
+function filterAnyTags(filter) {
+	return filter?.tags?.any || filter?.tagsAny || filter?.any || [];
+}
+
 function hasEveryTag(attribute, tags) {
-	return (tags || []).every(tag => attribute.tags.includes(tag));
+	return (tags || []).every(tag => attributeHasTag(attribute, tag));
 }
 
 function hasAnyTag(attribute, tags) {
-	return !tags?.length || tags.some(tag => attribute.tags.includes(tag));
+	return !tags?.length || tags.some(tag => attributeHasTag(attribute, tag));
 }
 
 function matchesFilter(attribute, filter) {
 	if (!filter) return true;
 	if (filter.names && !filter.names.includes(attribute.name)) return false;
 	if (filter.exclude && filter.exclude.includes(attribute.name)) return false;
-	if (filter.type && attribute.type !== filter.type) return false;
-	if (filter.types && !filter.types.includes(attribute.type)) return false;
-	if (Array.isArray(filter.tags) && !hasEveryTag(attribute, filter.tags)) return false;
-	if (filter.tags?.all && !hasEveryTag(attribute, filter.tags.all)) return false;
-	if (filter.tags?.any && !hasAnyTag(attribute, filter.tags.any)) return false;
-	if (filter.tagsAny && !hasAnyTag(attribute, filter.tagsAny)) return false;
+	if (filter.type && !attributeHasTag(attribute, filter.type)) return false;
+	if (filter.types && !filter.types.every(type => attributeHasTag(attribute, type))) return false;
+	if (!hasEveryTag(attribute, filterAllTags(filter))) return false;
+	if (!hasAnyTag(attribute, filterAnyTags(filter))) return false;
 	return true;
 }
 
