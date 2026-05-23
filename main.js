@@ -233,7 +233,7 @@ function regionLabel(names, { fallback = "", suffix = "", abbreviate = true } = 
 
 // Formats a named skill pool label for math rows.
 function namedSkillMathLabel(name) {
-	return regionLabel([name], { suffix: " skills" });
+	return regionLabel([name]);
 }
 
 // Returns a source modifier list with BigInt values.
@@ -2222,6 +2222,7 @@ function skillComponentMathParts(component, fixedSkillCount) {
 			return {
 				terms,
 				total: data.total,
+				meta: `${label}: ${data.classPool.length}`,
 				simple: {
 					label,
 					poolSize: data.classPool.length,
@@ -2238,6 +2239,7 @@ function skillComponentMathParts(component, fixedSkillCount) {
 		let label = simpleSkillComponentLabel(component);
 		return {
 			total,
+			meta: `${label}: ${feature.options.length}`,
 			simple: {
 				label,
 				poolSize: feature.options.length,
@@ -2259,6 +2261,7 @@ function skillComponentMathParts(component, fixedSkillCount) {
 		let label = simpleSkillComponentLabel(component);
 		return {
 			total,
+			meta: `${label}: ${component[0].options.length}`,
 			terms: [renderMathTerm({
 				label: countedRegionLabel(totalCount, label),
 				formula: `C(${component[0].options.length}, ${totalCount})`,
