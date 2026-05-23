@@ -762,6 +762,7 @@ const ATTRIBUTES = [
 		"name": "Acid Splash",
 		"type": "cantrip",
 		"tags": [
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -811,6 +812,7 @@ const ATTRIBUTES = [
 		"type": "cantrip",
 		"tags": [
 			"bard",
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -847,6 +849,7 @@ const ATTRIBUTES = [
 		"name": "Chill Touch",
 		"type": "cantrip",
 		"tags": [
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -918,7 +921,9 @@ const ATTRIBUTES = [
 		"name": "Dancing Lights",
 		"type": "cantrip",
 		"tags": [
+			"astralElf",
 			"bard",
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -1004,6 +1009,7 @@ const ATTRIBUTES = [
 		"type": "cantrip",
 		"tags": [
 			"druid",
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -1068,6 +1074,7 @@ const ATTRIBUTES = [
 		"name": "Fire Bolt",
 		"type": "cantrip",
 		"tags": [
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -1087,6 +1094,7 @@ const ATTRIBUTES = [
 		"type": "cantrip",
 		"tags": [
 			"bard",
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -1215,8 +1223,10 @@ const ATTRIBUTES = [
 		"name": "Light",
 		"type": "cantrip",
 		"tags": [
+			"astralElf",
 			"bard",
 			"cleric",
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -1244,6 +1254,7 @@ const ATTRIBUTES = [
 		"type": "cantrip",
 		"tags": [
 			"bard",
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -1264,6 +1275,7 @@ const ATTRIBUTES = [
 			"bard",
 			"cleric",
 			"druid",
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -1274,6 +1286,7 @@ const ATTRIBUTES = [
 		"tags": [
 			"bard",
 			"druid",
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -1282,6 +1295,7 @@ const ATTRIBUTES = [
 		"name": "Mind Sliver",
 		"type": "cantrip",
 		"tags": [
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -1292,6 +1306,7 @@ const ATTRIBUTES = [
 		"type": "cantrip",
 		"tags": [
 			"bard",
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -1302,6 +1317,7 @@ const ATTRIBUTES = [
 		"type": "cantrip",
 		"tags": [
 			"druid",
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -1312,6 +1328,7 @@ const ATTRIBUTES = [
 		"type": "cantrip",
 		"tags": [
 			"bard",
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -1348,6 +1365,7 @@ const ATTRIBUTES = [
 		"name": "Ray of Frost",
 		"type": "cantrip",
 		"tags": [
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -1372,6 +1390,7 @@ const ATTRIBUTES = [
 		"name": "Sacred Flame",
 		"type": "cantrip",
 		"tags": [
+			"astralElf",
 			"cleric"
 		]
 	},
@@ -1416,6 +1435,7 @@ const ATTRIBUTES = [
 		"name": "Shocking Grasp",
 		"type": "cantrip",
 		"tags": [
+			"koboldSorcery",
 			"sorcerer",
 			"wizard"
 		]
@@ -1442,6 +1462,7 @@ const ATTRIBUTES = [
 		"name": "Sorcerous Burst",
 		"type": "cantrip",
 		"tags": [
+			"koboldSorcery",
 			"sorcerer"
 		]
 	},
@@ -1507,6 +1528,7 @@ const ATTRIBUTES = [
 		"tags": [
 			"bard",
 			"druid",
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -1543,6 +1565,7 @@ const ATTRIBUTES = [
 		"type": "cantrip",
 		"tags": [
 			"bard",
+			"koboldSorcery",
 			"sorcerer",
 			"warlock",
 			"wizard"
@@ -1880,11 +1903,12 @@ const RACES = {
 			{
 				"count": 1,
 				"from": {
-					"names": [
-						"Dancing Lights",
-						"Light",
-						"Sacred Flame"
-					]
+					"type": "cantrip",
+					"tags": {
+						"all": [
+							"astralElf"
+						]
+					}
 				}
 			}
 		]
@@ -2329,28 +2353,12 @@ const RACES = {
 						{
 							"count": 1,
 							"from": {
-								"names": [
-									"Acid Splash",
-									"Blade Ward",
-									"Chill Touch",
-									"Dancing Lights",
-									"Elementalism",
-									"Fire Bolt",
-									"Friends",
-									"Light",
-									"Mage Hand",
-									"Mending",
-									"Message",
-									"Mind Sliver",
-									"Minor Illusion",
-									"Poison Spray",
-									"Prestidigitation",
-									"Ray of Frost",
-									"Shocking Grasp",
-									"Sorcerous Burst",
-									"Thunderclap",
-									"True Strike"
-								]
+								"type": "cantrip",
+								"tags": {
+									"all": [
+										"koboldSorcery"
+									]
+								}
 							}
 						}
 					]

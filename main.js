@@ -572,9 +572,6 @@ function choiceSummary(choice, fixed, forcedItems = []) {
 		return "";
 	}
 	let pool = choicePool(choice, fixed);
-	if (choice.from?.names && pool.length === choice.count) {
-		return `${titleCase(choiceLabel)}: ${pool.join(", ")}`;
-	}
 	let spellType = spellChoiceType(pool);
 	if (spellType) {
 		let feature = {
@@ -684,9 +681,7 @@ function classSpellBranches(className, source, baseChoices) {
 			choices.push({
 				label: `${branch.name} extra cantrip`,
 				count: branch.extraCantrips.count,
-				from: branch.extraCantrips.options
-					? { names: branch.extraCantrips.options }
-					: { type: "cantrip", tags: { all: [classTagFor(className)] } },
+				from: { type: "cantrip", tags: { all: [classTagFor(className)] } },
 				source: `Class: ${className}`
 			});
 		}
@@ -2060,12 +2055,13 @@ function componentMathHTML(component) {
 	if (component.length === 1) {
 		let feature = component[0];
 		let title = mathCategoryTitle(feature);
+		let label = title === "Tool Math"
+			? proficiencyFeatureRequirementLines(feature).join(", ")
+			: countedRegionLabel(feature.count, sourceRegionLabel(1, component));
 		return renderSingleMathBlock(
 			title,
-			singleFeatureMathMeta(feature),
-			title === "Tool Math"
-				? proficiencyFeatureRequirementLines(feature).join(", ")
-				: featureMathLabel(feature),
+			singleFeatureMathMeta(feature) || singleComponentMathMeta(component),
+			label,
 			`C(${feature.options.length}, ${feature.count})`,
 			choose(feature.options.length, feature.count)
 		);
@@ -2077,12 +2073,13 @@ function componentMathHTML(component) {
 		let totalCount = component.reduce((sum, feature) => sum + feature.count, 0);
 		let title = mathCategoryTitle(component[0]);
 		let combinedFeature = { ...component[0], count: totalCount };
+		let label = title === "Tool Math"
+			? proficiencyFeatureRequirementLines(combinedFeature).join(", ")
+			: countedRegionLabel(totalCount, sourceRegionLabel((1 << component.length) - 1, component));
 		return renderSingleMathBlock(
 			title,
-			singleFeatureMathMeta(component[0]),
-			title === "Tool Math"
-				? proficiencyFeatureRequirementLines(combinedFeature).join(", ")
-				: `${totalCount} ${pluralizeChoiceLabel("choices", totalCount)}`,
+			singleFeatureMathMeta(component[0]) || singleComponentMathMeta(component),
+			label,
 			`C(${component[0].options.length}, ${totalCount})`,
 			choose(component[0].options.length, totalCount)
 		);
@@ -2095,6 +2092,14 @@ function componentMathHTML(component) {
 		title,
 		resultLabel: componentRegionResultLabel(title)
 	});
+}
+
+// Summarizes the pool size for one non-overlap math component.
+function singleComponentMathMeta(component) {
+	let label = sourceRegionLabel((1 << component.length) - 1, component);
+	if (!label) return "";
+	let poolSize = component[0]?.options?.length || 0;
+	return `${label}: ${poolSize}`;
 }
 
 // Chooses the math title for an overlap component.
