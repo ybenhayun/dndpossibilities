@@ -1,102 +1,303 @@
-// engine.js
-// Calculator for skills.js. Counts distinct final character option sets
-// from tagged attributes instead of enumerating every row.
-
-const ORIGIN_FEATS = [
-	"Alert",
-	"Crafter",
-	"Healer",
-	"Lucky",
-	"Magic Initiate",
-	"Musician",
-	"Savage Attacker",
-	"Skilled",
-	"Tavern Brawler",
-	"Tough"
-];
-
-// Counts the global two-standard-language choices from the tagged data.
-function globalLanguageWeight() {
-	let choice = GLOBALS.languageChoices;
-	let poolSize = getAttributes(choice).length;
-	return choose(poolSize, choice.count);
-}
-const REPEATABLE_FEATS = new Set(["Skilled", "Magic Initiate"]);
-const MAGIC_INITIATE_LISTS = ["cleric", "druid", "wizard"];
-const TAGGED_REQUIREMENT_ORDER = ["skill", "tool", "spell"];
-const PROFICIENCY_POOL_LABELS = {
-	skill: "skills",
-	instrument: "instruments",
-	artisanTool: "artisan tools",
-	gamingSet: "gaming sets",
-	tool: "tools"
-};
-const MAIN_TYPE_PARENTS = {
-	skill: ["proficiency"],
-	instrument: ["tool"],
-	artisanTool: ["tool"],
-	gamingSet: ["tool"],
-	kit: ["tool"],
-	tool: ["proficiency"],
-	standardLanguage: ["language"],
-	rareLanguage: ["language"],
-	originFeat: ["feat"]
-};
-const GLOBAL_LANGUAGE_WEIGHT = globalLanguageWeight();
-const SKILL_MATH_ABBREVIATIONS = {
-	"Barbarian": "BAR",
-	"Bard": "BRD",
-	"Cleric": "CLE",
-	"Druid": "DRU",
-	"Fighter": "FIG",
-	"Monk": "MON",
-	"Paladin": "PAL",
-	"Ranger": "RAN",
-	"Rogue": "ROG",
-	"Sorcerer": "SOR",
-	"Warlock": "WAR",
-	"Wizard": "WIZ",
-	"Astral Elf": "AEL",
-	"Bugbear": "BUG",
-	"Centaur": "CEN",
-	"Changeling": "CHN",
-	"Eladrin": "ELD",
-	"Elf": "ELF",
-	"Harengon": "HAR",
-	"Kender": "KND",
-	"Kobold": "KOB",
-	"Lizardfolk": "LIZ",
-	"Satyr": "SAT",
-	"SeaElf": "SEA",
-	"ShadarKai": "SHK",
-	"Shifter": "SHF",
-	"Tabaxi": "TAB",
-	"Tortle": "TOR",
-	"Vedalken": "VED"
-};
-const TAGGED_REQUIREMENT_DISPLAY = {
-	skill: { title: "Skill Math", resultLabel: "skill sets" },
-	tool: { title: "Tool Math", resultLabel: "tool sets" },
-	cantrip: { title: "Cantrip Math", resultLabel: "cantrip sets", typeLabelPlural: "cantrips" },
-	level1spell: { title: "Level 1 Spell Math", resultLabel: "level 1 spell sets", typeLabelPlural: "level 1 spells" }
-};
-const SPELL_LIST_TAGS = ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"];
-
-const attributeByName = new Map(ATTRIBUTES.map(attribute => [attribute.name, attribute]));
-
-// SECTION: Shared Constants And Basic Helpers
-// Normalizes a Magic Initiate spell-list name for comparisons.
-function normalizeMagicInitiateList(list) {
-	return String(list).toLowerCase();
+function getBranches() {
+	let dropdownsText = selectDropdowns();
+	return calculateDraft(dropdownsText.background, dropdownsText.race, dropdownsText.class).branches;
 }
 
-// Returns the Magic Initiate lists available from a source.
-function magicInitiateListsFromSource(source) {
-	return (source?.magicInitiate?.lists || MAGIC_INITIATE_LISTS)
-		.map(normalizeMagicInitiateList);
+function calculateDraft(backgroundName, raceName, className) {
+	let backgroundRequirements = copyRequirements(BACKGROUNDS[backgroundName]);
+	let raceRequirements = copyRequirements(RACES[raceName]);
+	let classRequirements = copyRequirements(CLASSES[className]);
+
+	let requirements = {
+		background: backgroundRequirements,
+		race: raceRequirements,
+		class: classRequirements
+	};
+
+	addOriginChoices(requirements.background);
+	let attributesCopy = [...ATTRIBUTES];
+	let mergedBranches = createBranches(requirements, attributesCopy);
+	let baseWeight = mergedBranches.reduce((sum, branch) => sum + branch.merged.weightedTotal, 0n);
+
+	return {
+		branches: mergedBranches,
+		branchRows: mergedBranches,
+		baseWeight
+	};
 }
 
-// Calculates n choose k using BigInt arithmetic.
+function selectDropdowns() {
+	return {
+		background: document.getElementById("backgroundSelect").value,
+		race: document.getElementById("raceSelect").value,
+		class: document.getElementById("classSelect").value
+	};
+}
+
+// copies requirement objects so to not alter originals
+function copyRequirements(requirements) {
+	return {
+		...requirements,
+		fixed: [...(requirements?.fixed || [])],
+		choices: [...(requirements?.choices || [])],
+		modifiers: {...(requirements?.modifiers || {})}
+	};
+}
+
+function addOriginChoices(background) {
+	if (!background.originFeat) return;
+
+	let [originFeat, originFeatDetail] = background.originFeat.split(":");
+
+	if (originFeat === "Skilled") {
+		background.skilledCount = (background.skilledCount || 0) + 1;
+	} else if (originFeat === "Crafter") {
+		background.choices.push({count: 3, all: ["artisanTool"]});
+	} else if (originFeat === "Musician") {
+		background.choices.push({count: 3, all: ["instrument"]});
+	} else if (originFeat === "Magic Initiate") {
+		let tag = originFeatDetail.toLowerCase();
+		background.choices.push({count: 2, all: ["cantrip", tag]});
+		background.choices.push({count: 1, all: ["level1spell", tag]});
+		background.modifiers.spellcastingAbility = 3;
+	}
+}
+
+function createBranches(requirements, attributesCopy) {
+	let mergedBranches = [];
+
+	for (let background of requirementBranches(requirements.background)) {
+		for (let race of requirementBranches(requirements.race)) {
+			let raceBranches = originFeatBranches(race, background); // only needed for human origin feat branches
+
+			for (let raceBranch of raceBranches) {
+				for (let classRequirements of requirementBranches(requirements.class)) {
+					let branchRequirements = {background, race: raceBranch, class: classRequirements};
+
+					for (let skilledBranch of skilledChoiceBranches(branchRequirements)) {
+						let merged = {fixed: []};
+						let branchAttributes = [...attributesCopy];
+
+						addFixedRequirements(skilledBranch, merged, branchAttributes);
+						for (let group of Object.values(skilledBranch)) {
+							group.choices = collectChoices({group}, branchAttributes);
+						}
+						merged.choiceGroups = choiceGroups(collectChoices(skilledBranch, branchAttributes), branchAttributes);
+						addCombinationMath(merged.choiceGroups);
+						addModifiers(skilledBranch, merged);
+						addExpertise(skilledBranch, merged);
+						addWeightedTotal(merged);
+
+						mergedBranches.push({
+							merged,
+							attributes: branchAttributes,
+							background: skilledBranch.background,
+							race: skilledBranch.race,
+							class: skilledBranch.class
+						});
+					}
+				}
+			}
+		}
+	}
+
+	return mergedBranches;
+}
+
+// creates branches whenever expertise & skilled are both present
+function skilledChoiceBranches(requirements) {
+	let skilledCount = (requirements.background.skilledCount || 0) + (requirements.race.skilledCount || 0) + (requirements.class.skilledCount || 0);
+	if (!skilledCount) return [requirements];
+
+	let totalPicks = skilledCount * 3;
+
+	if (!requirements.class.expertise) {
+		let branch = copyBranchRequirements(requirements);
+		branch.background.choices.push({count: totalPicks, all: ["proficiency"]});
+		return [branch];
+	}
+
+	let branches = [];
+	for (let skillCount = totalPicks; skillCount >= 0; skillCount--) {
+		let branch = copyBranchRequirements(requirements);
+		let nonSkillCount = totalPicks - skillCount;
+		branch.class.branch = `${skillCount} ${skillCount === 1 ? "skill" : "skills"}, ${nonSkillCount} non-skill ${nonSkillCount === 1 ? "proficiency" : "proficiencies"}`;
+		if (skillCount) branch.background.choices.push({count: skillCount, all: ["skill"]});
+		if (nonSkillCount) branch.background.choices.push({count: nonSkillCount, all: ["proficiency"], not: ["skill"]});
+		branches.push(branch);
+	}
+	return branches;
+}
+
+function copyBranchRequirements(requirements) {
+	return {
+		background: copyRequirements(requirements.background),
+		race: copyRequirements(requirements.race),
+		class: copyRequirements(requirements.class)
+	};
+}
+
+function originFeatBranches(race, background) {
+	if (!race.originFeatChoice) return [race];
+
+	return race.originFeatChoice.options.filter(option => !sameOriginFeat(option, background)).map(option => {
+		let branch = copyRequirements(race);
+		branch.originFeat = option;
+		branch.branch = `Origin Feat: ${option}`;
+		addOriginChoices(branch);
+		return branch;
+	});
+}
+
+function sameOriginFeat(option, background) {
+	if (option === "Skilled" && background.originFeat === "Skilled") return false;
+	return option === background.originFeat;
+}
+
+function requirementBranches(requirements) {
+	if (!requirements.branches?.length) {
+		return [copyRequirements(requirements)];
+	}
+
+	return requirements.branches.map(branch => addBranchRequirements(requirements, branch));
+}
+
+// merges branch object with parent
+function addBranchRequirements(requirements, branch) {
+	let {branches, ...baseRequirements} = copyRequirements(requirements);
+
+	return {
+		...baseRequirements,
+		branch: branch.name || null,
+		fixed: [...(requirements.fixed || []), ...(branch.fixed || [])],
+		choices: [...(requirements.choices || []), ...(branch.choices || [])],
+		modifiers: {
+			...(requirements.modifiers || {}),
+			...(branch.modifiers || {})
+		}
+	};
+}
+
+function addFixedRequirements(requirements, merged, attributesCopy) {
+	for (let group of Object.values(requirements)) {
+		for (let i = (group.fixed || []).length - 1; i >= 0; i--) {
+			let skill = group.fixed[i];
+			let j = attributesCopy.findIndex(attribute => attribute.name === skill);
+
+			if (j >= 0) {
+				attributesCopy.splice(j, 1);
+				merged.fixed.push(skill);
+			} else {
+				let duplicate = ATTRIBUTES.find(attribute => attribute.name === skill);
+				group.fixed.splice(i, 1);
+				if (attributeHasTag(duplicate, "skill")) group.choices.push({count: 1, all: ["skill"]});
+			}
+		}
+	}
+}
+
+function collectChoices(requirements, attributes) {
+	let choices = [];
+
+	for (let group of Object.values(requirements)) {
+		for (let choice of group.choices || []) {
+			choice.total = attributes.filter(attribute => attributeMatchesChoice(attribute, choice)).length;
+			let existingChoice = choices.find(existingChoice => sameChoice(existingChoice, choice));
+
+			if (existingChoice) {
+				existingChoice.count += choice.count;
+			} else {
+				choices.push({...choice});
+			}
+		}
+	}
+
+	return choices;
+}
+
+function choiceGroups(choices, attributes) {
+	let pools = choices.map(choice => attributes.filter(attribute => attributeMatchesChoice(attribute, choice)));
+	let components = choiceComponents(choices, pools);
+
+	return components.map(component => {
+		let groupChoices = component.map(index => choices[index]);
+		let relevantTags = relevantTagsForComponent(component.map(index => choices[index]));
+		let totals = new Map();
+
+		for (let attribute of attributes) {
+			if (!component.some(index => attributeMatchesChoice(attribute, choices[index]))) continue;
+
+			let satisfies = relevantTags.filter(tag => attributeHasTag(attribute, tag));
+			let key = satisfies.join("|");
+			let total = totals.get(key);
+			if (!total) {
+				total = {count: 0, satisfies};
+				totals.set(key, total);
+			}
+			total.count++;
+		}
+
+		let group = {
+			choices: groupChoices,
+			totals: [...totals.values()]
+		};
+		group.combinations = validCombinations(group);
+		return group;
+	});
+}
+
+// comes up with every combination that satisfies the needed choice requirements
+// ie c(11,4) * c(7,2), c(11,5) * c(7,1), c(11,6) for kenku + rogue
+// ie 4 rogue skills/2 general, 5 rogue skills/1 general, 6 rogue skills
+function validCombinations(group) {
+	let combinations = [];
+	let requiredCount = group.choices.reduce((sum, choice) => sum + choice.count, 0);
+
+	function search(index, remaining, picked) {
+		if (index === group.totals.length) {
+			if (remaining === 0 && choicesAreSatisfied(group, picked)) {
+				combinations.push(picked
+					.map((count, i) => ({
+						count,
+						from: group.totals[i].count,
+						satisfies: group.totals[i].satisfies
+					}))
+					.filter(pick => pick.count > 0)
+				);
+			}
+			return;
+		}
+
+		let max = Math.min(group.totals[index].count, remaining);
+		for (let count = 0; count <= max; count++) {
+			picked[index] = count;
+			search(index + 1, remaining - count, picked);
+		}
+	}
+
+	search(0, requiredCount, []);
+	return combinations;
+}
+
+function addCombinationMath(choiceGroups) {
+	for (let group of choiceGroups) {
+		group.combinations = group.combinations.map(combination => {
+			let parts = combination.map(part => ({
+				...part,
+				term: `C(${part.from}, ${part.count})`,
+				value: choose(part.from, part.count)
+			}));
+
+			return {
+				parts,
+				product: parts.reduce((product, part) => product * part.value, 1n)
+			};
+		});
+
+		group.sum = group.combinations.reduce((sum, combination) => sum + combination.product, 0n);
+	}
+}
+
 function choose(n, k) {
 	n = BigInt(n);
 	k = BigInt(k);
@@ -104,261 +305,102 @@ function choose(n, k) {
 	if (k > n - k) k = n - k;
 	let result = 1n;
 	for (let i = 1n; i <= k; i++) {
-		result = (result * (n - k + i)) / i;
+		result = result * (n - k + i) / i;
 	}
 	return result;
 }
 
-// Formats a BigInt-like value with commas.
-function format(value) {
-	return BigInt(value).toLocaleString("en-US");
-}
+function choicesAreSatisfied(group, picked) {
+	let remainingChoices = group.choices.map(choice => choice.count);
+	let memo = new Set();
 
-// Converts a class name into its data tag.
-function classTagFor(className) {
-	return className ? className.toLowerCase() : "";
-}
+	function assign(totalIndex) {
+		while (totalIndex < group.totals.length && !picked[totalIndex]) totalIndex++;
+		if (totalIndex === group.totals.length) return remainingChoices.every(count => count === 0);
 
-// Shortens source names used inside skill-math labels.
-function skillMathAbbreviation(name) {
-	return SKILL_MATH_ABBREVIATIONS[name] || name;
-}
+		let key = `${totalIndex}|${remainingChoices.join(",")}`;
+		if (memo.has(key)) return false;
 
-// Formats a region label from one or more source/list names.
-function regionLabel(names, { fallback = "", suffix = "", abbreviate = true } = {}) {
-	let uniqueNames = [...new Set((names || []).filter(Boolean))];
-	if (!uniqueNames.length) return fallback;
-	let formatted = uniqueNames
-		.map(name => abbreviate ? skillMathAbbreviation(name) : name)
-		.join("/");
-	return `${formatted}${suffix}`;
-}
+		let total = group.totals[totalIndex];
+		let eligibleChoices = group.choices
+			.map((choice, choiceIndex) => ({choice, choiceIndex}))
+			.filter(({choice, choiceIndex}) => remainingChoices[choiceIndex] && totalSatisfiesChoice(total, choice));
 
-// Returns a source modifier list with BigInt values.
-function modifierEntries(source) {
-	return Object.entries(source?.modifiers || {}).map(([label, value]) => ({
-		label,
-		value: BigInt(value)
-	}));
-}
-
-// Looks up a selected background, race, or class object.
-function sourceByName(collection, name) { return name !== "None" ? collection[name] : null; }
-
-// Checks whether an attribute name is a skill proficiency.
-function isSkill(name) {
-	return hasTag(name, "skill");
-}
-
-// Returns the inherent categories for an attribute.
-function attributeTypes(attribute) {
-	if (!attribute) return [];
-	let directTypes = attribute.types || (attribute.type ? [attribute.type] : []);
-	let out = [];
-	function add(type) {
-		if (out.includes(type)) return;
-		out.push(type);
-		for (let parent of MAIN_TYPE_PARENTS[type] || []) add(parent);
-	}
-	for (let type of directTypes) add(type);
-	return out;
-}
-
-// Checks whether an attribute object has an inherent category or source tag.
-function attributeHasTag(attribute, tag) {
-	return attributeTypes(attribute).includes(tag) || (attribute.tags || []).includes(tag);
-}
-
-// Checks whether an attribute name has a data tag.
-function hasTag(name, tag) { return attributeHasTag(attributeByName.get(name), tag); }
-
-// Finds the shared proficiency tag for a full name pool.
-function sharedProficiencyTag(names, tags = Object.keys(PROFICIENCY_POOL_LABELS)) {
-	return tags.find(tag => names.length > 0 && names.every(name => hasTag(name, tag))) || "";
-}
-
-// Finds the shared proficiency tag for a list of attribute objects.
-function sharedAttributeTag(attributes, tags = Object.keys(PROFICIENCY_POOL_LABELS)) {
-	return tags.find(tag => attributes.length > 0 && attributes.every(attribute => attributeHasTag(attribute, tag))) || "";
-}
-
-// Returns available attribute names matching a filter after fixed exclusions.
-function poolNames(filter, fixed = new Set()) {
-	return getAttributes(filter).map(attribute => attribute.name).filter(name => !fixed.has(name));
-}
-
-// Returns the filter carried by a choice, supporting both old and shorthand schema.
-function choiceFilter(choice) {
-	return choice.from || choice;
-}
-
-// Builds the remaining option pool for a choice after fixed selections.
-function choicePool(choice, fixed = new Set()) {
-	let rawNames = getAttributes(choiceFilter(choice)).map(attribute => attribute.name);
-	let pool = rawNames.filter(name => !fixed.has(name));
-	let fixedSkillOverlaps = rawNames.filter(name => fixed.has(name) && isSkill(name)).length;
-
-	if (fixedSkillOverlaps && choice.count === 1 && pool.length === 0) {
-		return poolNames({ all: ["skill"] }, fixed);
-	}
-
-	return pool;
-}
-
-// SECTION: Choice-Set Counting Core
-// Normalizes choice features and removes empty choices.
-function activeFeatures(features) {
-	return features
-		.map(feature => ({
-			...feature,
-			count: feature.count || 0,
-			options: [...new Set(feature.options || [])].sort()
-		}))
-		.filter(feature => feature.count > 0);
-}
-
-// Builds a stable cache key for a set of choice features.
-function featureKey(features) {
-	return JSON.stringify(
-		features.map(feature => ({
-			count: feature.count,
-			options: [...new Set(feature.options)].sort()
-		}))
-	);
-}
-
-const skillCountChoiceCache = new Map();
-
-// Counts distinct final sets by summing the skill-count buckets.
-function countDistinctChoiceSets(features) {
-	return sumMapValues(countDistinctChoicesBySkillCount(features));
-}
-
-// Counts distinct choices grouped by how many selected items are skills.
-function countDistinctChoicesBySkillCount(features) {
-	let active = activeFeatures(features);
-
-	if (!active.length) return new Map([[0, 1n]]);
-	if (active.some(feature => feature.options.length < feature.count)) return new Map();
-
-	let cacheKey = featureKey(active);
-	if (skillCountChoiceCache.has(cacheKey)) return skillCountChoiceCache.get(cacheKey);
-
-	let components = featureComponents(active);
-	if (components.length > 1) {
-		let totals = components
-			.map(component => countDistinctChoicesBySkillCount(component))
-			.reduce(convolveSkillCountMaps, new Map([[0, 1n]]));
-		skillCountChoiceCache.set(cacheKey, totals);
-		return totals;
-	}
-
-	let totalPickCount = active.reduce((sum, feature) => sum + feature.count, 0);
-	let regions = componentOverlapRegions(active)
-		.map(region => ({
-			mask: region.mask,
-			skills: region.options.filter(isSkill).length,
-			other: region.options.filter(option => !isSkill(option)).length
-		}));
-	let chosenByRegion = [];
-	let totals = new Map();
-
-	function addTotal(skillCount, ways) {
-		totals.set(skillCount, (totals.get(skillCount) || 0n) + ways);
-	}
-
-	function canAssign(regionIndex, remaining) {
-		if (regionIndex === regions.length) return remaining.every(count => count === 0);
-
-		let { mask } = regions[regionIndex];
-		let chosen = chosenByRegion[regionIndex] || 0;
-		let featureIndexes = active
-			.map((_, index) => index)
-			.filter(index => mask & (1 << index));
-
-		function distribute(featureOffset, left, nextRemaining) {
-			if (featureOffset === featureIndexes.length) {
-				return left === 0 && canAssign(regionIndex + 1, nextRemaining);
-			}
-
-			let featureIndex = featureIndexes[featureOffset];
-			let maxUse = Math.min(left, nextRemaining[featureIndex]);
-			for (let use = 0; use <= maxUse; use++) {
-				let after = [...nextRemaining];
-				after[featureIndex] -= use;
-				if (distribute(featureOffset + 1, left - use, after)) return true;
-			}
+		if (!eligibleChoices.length) {
+			memo.add(key);
 			return false;
 		}
 
-		return distribute(0, chosen, [...remaining]);
+		let allocations = allocationsForTotal(picked[totalIndex], eligibleChoices, remainingChoices);
+		for (let allocation of allocations) {
+			for (let [choiceIndex, count] of allocation) remainingChoices[choiceIndex] -= count;
+			if (assign(totalIndex + 1)) return true;
+			for (let [choiceIndex, count] of allocation) remainingChoices[choiceIndex] += count;
+		}
+
+		memo.add(key);
+		return false;
 	}
 
-	function visitRegion(index, picked, skillPicked, ways) {
-		if (index === regions.length) {
-			if (picked === totalPickCount && canAssign(0, active.map(feature => feature.count))) {
-				addTotal(skillPicked, ways);
-			}
+	return assign(0);
+}
+
+function allocationsForTotal(count, eligibleChoices, remainingChoices) {
+	let allocations = [];
+
+	function search(index, remaining, allocation) {
+		if (index === eligibleChoices.length) {
+			if (remaining === 0) allocations.push(allocation.filter(([, amount]) => amount));
 			return;
 		}
 
-		let region = regions[index];
-		let regionSize = region.skills + region.other;
-		let maxPick = Math.min(regionSize, totalPickCount - picked);
-
-		for (let skillPick = 0; skillPick <= Math.min(region.skills, maxPick); skillPick++) {
-			let remainingPick = maxPick - skillPick;
-			let maxOtherPick = Math.min(region.other, remainingPick);
-			for (let otherPick = 0; otherPick <= maxOtherPick; otherPick++) {
-				let pick = skillPick + otherPick;
-				chosenByRegion[index] = pick;
-				visitRegion(
-					index + 1,
-					picked + pick,
-					skillPicked + skillPick,
-					ways * choose(region.skills, skillPick) * choose(region.other, otherPick)
-				);
-			}
+		let choiceIndex = eligibleChoices[index].choiceIndex;
+		let max = Math.min(remaining, remainingChoices[choiceIndex]);
+		for (let amount = 0; amount <= max; amount++) {
+			allocation.push([choiceIndex, amount]);
+			search(index + 1, remaining - amount, allocation);
+			allocation.pop();
 		}
 	}
 
-	visitRegion(0, 0, 0, 1n);
-	skillCountChoiceCache.set(cacheKey, totals);
-	return totals;
+	search(0, count, []);
+	return allocations;
 }
 
-// Sums the BigInt values in a Map.
-function sumMapValues(map) {
-	return [...map.values()].reduce((sum, value) => sum + value, 0n);
+function totalSatisfiesChoice(total, choice) {
+	if (choice.all && !choice.all.every(tag => total.satisfies.includes(tag))) return false;
+	if (choice.any && !choice.any.some(tag => total.satisfies.includes(tag))) return false;
+	if (choice.not && choice.not.some(tag => total.satisfies.includes(tag))) return false;
+	return true;
 }
 
-// Splits choice features into independent overlap components.
-function featureComponents(features) {
-	let optionToFeatures = new Map();
-	features.forEach((feature, index) => {
-		for (let option of feature.options) {
-			if (!optionToFeatures.has(option)) optionToFeatures.set(option, []);
-			optionToFeatures.get(option).push(index);
+function relevantTagsForComponent(choices) {
+	let tags = [];
+	for (let choice of choices) {
+		for (let tag of [...(choice.all || []), ...(choice.any || [])]) {
+			if (!tags.includes(tag)) tags.push(tag);
 		}
-	});
+	}
+	return tags;
+}
 
-	let visited = new Set();
+function choiceComponents(choices, pools) {
 	let components = [];
-	for (let i = 0; i < features.length; i++) {
-		if (visited.has(i)) continue;
-		let queue = [i];
-		let component = [];
-		visited.add(i);
+	let seen = new Set();
 
-		for (let cursor = 0; cursor < queue.length; cursor++) {
-			let featureIndex = queue[cursor];
-			component.push(features[featureIndex]);
-			for (let option of features[featureIndex].options) {
-				for (let neighbor of optionToFeatures.get(option) || []) {
-					if (visited.has(neighbor)) continue;
-					visited.add(neighbor);
-					queue.push(neighbor);
-				}
+	for (let i = 0; i < pools.length; i++) {
+		if (seen.has(i)) continue;
+		let component = [];
+		let queue = [i];
+		seen.add(i);
+
+		for (let j = 0; j < queue.length; j++) {
+			let current = queue[j];
+			component.push(current);
+			for (let k = 0; k < pools.length; k++) {
+				if (seen.has(k) || !choicesBelongTogether(choices[current], choices[k], pools[current], pools[k])) continue;
+				seen.add(k);
+				queue.push(k);
 			}
 		}
 
@@ -368,2714 +410,83 @@ function featureComponents(features) {
 	return components;
 }
 
-// Combines skill-count distributions from independent components.
-function convolveSkillCountMaps(left, right) {
-	let out = new Map();
-	for (let [leftSkills, leftWays] of left.entries()) {
-		for (let [rightSkills, rightWays] of right.entries()) {
-			let skills = leftSkills + rightSkills;
-			out.set(skills, (out.get(skills) || 0n) + leftWays * rightWays);
-		}
-	}
-	return out;
+function choicesBelongTogether(firstChoice, secondChoice, firstPool, secondPool) {
+	return choiceGroupKind(firstChoice) === choiceGroupKind(secondChoice) || poolsOverlap(firstPool, secondPool);
 }
 
-// SECTION: Choice Expansion And Feat Branching
-// Expands raw choices into alternative feature sets.
-function featureAlternativesFromChoices(choices, fixed) {
-	return choices.reduce((branches, choice) => {
-		let alternatives = featureAlternativesForChoice(choice, fixed);
-		return branches.flatMap(branch =>
-			alternatives.map(alternative => branch.concat(alternative))
-		);
-	}, [[]]);
+function choiceGroupKind(choice) {
+	let tags = [...(choice.all || []), ...(choice.any || [])];
+	if (tags.includes("cantrip")) return "cantrip";
+	if (tags.includes("level1spell")) return "level1spell";
+	if (tags.includes("skill")) return "skill";
+	if (tags.some(tag => ["tool", "instrument", "artisanTool", "gamingSet"].includes(tag))) return "tool";
+	return tags.join("|");
 }
 
-// Converts one source choice into countable feature alternatives.
-function featureAlternativesForChoice(choice, fixed) {
-	let filter = choiceFilter(choice);
-	let rawNames = getAttributes(filter).map(attribute => attribute.name);
-	let rawSkills = rawNames.filter(isSkill);
-	let fixedSkillOverlaps = rawSkills.filter(name => fixed.has(name)).length;
-	let listedPool = rawNames.filter(name => !fixed.has(name));
-
-	if (
-		!fixedSkillOverlaps ||
-		rawSkills.length !== rawNames.length ||
-		listedPool.length >= choice.count
-	) {
-		return [[{
-			label: choiceDisplayLabel(choice),
-				count: choice.count,
-				options: choicePool(choice, fixed),
-				source: choice.source || "Choice",
-				from: filter
-			}]];
-	}
-
-	let replacementPool = poolNames(
-		{ all: ["skill"] },
-		fixed
-	).filter(name => !listedPool.includes(name));
-	let replacementCount = choice.count - listedPool.length;
-	let features = [];
-
-	if (listedPool.length > 0) {
-			features.push({
-				label: `${choiceDisplayLabel(choice)} listed skills`,
-				count: listedPool.length,
-				options: listedPool,
-				source: choice.source || "Choice",
-				from: filter,
-				forceListed: true
-			});
-		}
-		if (replacementCount > 0) {
-			features.push({
-				label: `${choiceDisplayLabel(choice)} replacement skills`,
-				count: replacementCount,
-				options: replacementPool,
-				source: choice.source || "Choice",
-				from: { all: ["skill"] }
-			});
-		}
-
-	return [features];
+function poolsOverlap(first, second) {
+	return first.some(attribute => second.includes(attribute));
 }
 
-// Builds Magic Initiate cantrip and spell choices for one list.
-function magicInitiateChoices(list) {
-	let tag = normalizeMagicInitiateList(list);
-	return [
-		{
-			label: "cantrips",
-			count: 2,
-			source: `Feat: ${titleCase(tag)}`,
-			from: { all: ["cantrip", tag] }
-		},
-		{
-			label: "level 1 spell",
-			count: 1,
-			source: `Feat: ${titleCase(tag)}`,
-			from: { all: ["level1spell", tag] }
-		}
-	];
+function attributeMatchesChoice(attribute, choice) {
+	if (choice.all && !choice.all.every(tag => attributeHasTag(attribute, tag))) return false;
+	if (choice.any && !choice.any.some(tag => attributeHasTag(attribute, tag))) return false;
+	if (choice.not && choice.not.some(tag => attributeHasTag(attribute, tag))) return false;
+	return true;
 }
 
-// Creates a readable summary for one source choice.
-function choiceSummary(choice, fixed, forcedItems = []) {
-	if (choice.replacementOnly) {
-		return `${titleCase(choiceDisplayLabel(choice))}: ${choice.count} replacement ${pluralizeChoiceLabel("skills", choice.count)}`;
-	}
-	let rawNames = getAttributes(choiceFilter(choice)).map(attribute => attribute.name);
-	let rawSkills = rawNames.filter(isSkill);
-	let forcedSet = new Set(forcedItems);
-	let fixedSkillOverlaps = rawSkills.filter(name => fixed.has(name) && !forcedSet.has(name)).length;
-	let forcedListedSkills = rawSkills.filter(name => forcedSet.has(name)).length;
-	if (fixedSkillOverlaps && forcedListedSkills && rawSkills.length === rawNames.length) {
-		return `${titleCase(choiceDisplayLabel(choice))}: ${fixedSkillOverlaps} replacement ${pluralizeChoiceLabel("skills", fixedSkillOverlaps)}`;
-	}
-	let choiceLabel = choiceDisplayLabel(choice);
-	let alternatives = featureAlternativesForChoice(choice, fixed);
-	if (
-		alternatives.length === 1 &&
-		alternatives[0].length === 1 &&
-		alternatives[0][0].label.includes("replacement")
-	) {
-		let feature = alternatives[0][0];
-		return `${titleCase(choiceLabel)}: ${feature.count} ${pluralizeChoiceLabel(feature.label.replace(`${choiceLabel} `, ""), feature.count)}`;
-	}
-	if (alternatives.length === 1 && alternatives[0].length > 1) {
-		let parts = alternatives[0]
-			.filter(feature => feature.options.length !== feature.count)
-			.map(feature => `${feature.count} ${pluralizeChoiceLabel(feature.label.replace(`${choiceLabel} `, ""), feature.count)}`)
-			.join(" + ");
-		if (parts) return `${titleCase(choiceLabel)}: ${parts}`;
-		return "";
-	}
-	let pool = choicePool(choice, fixed);
-	let spellType = spellChoiceType(pool);
-	if (spellType) {
-		let feature = {
-			label: choiceLabel,
-			count: choice.count,
-			options: pool,
-			from: choiceFilter(choice)
-		};
-		let tag = inferSpellListTag(feature, spellType);
-		let spellLabel = spellType === "cantrip" ? "cantrips" : "level 1 spells";
-		return `${tag ? `${titleCase(tag)} ` : ""}${pluralizeChoiceLabel(spellLabel, choice.count)}: ${countPoolLabel(choice.count, pool.length)}`;
-	}
-	return `${titleCase(choiceLabel)}: ${countPoolLabel(choice.count, pool.length)}`;
-}
-
-// Chooses the display label for a source choice.
-function choiceDisplayLabel(choice) {
-	if (choice.label) return choice.label;
-	let filter = choiceFilter(choice);
-	let attributes = getAttributes(filter);
-	let everyAttributeHas = tag => attributes.length > 0 && attributes.every(attribute => attributeHasTag(attribute, tag));
-	let anyTags = filter.tags?.any || filter.any || [];
-
-	if (everyAttributeHas("cantrip")) return "cantrips";
-	if (everyAttributeHas("level1spell")) return "level 1 spells";
-	if (everyAttributeHas("language")) return "languages";
-	if (everyAttributeHas("proficiency")) {
-		let sharedTag = sharedAttributeTag(attributes);
-		if (sharedTag) return PROFICIENCY_POOL_LABELS[sharedTag];
-		if (anyTags.includes("artisanTool") && anyTags.includes("instrument")) {
-			return "artisan tool or instrument";
-		}
-		return "proficiencies";
-	}
-	return "choices";
-}
-
-// Determines whether a spell choice is cantrips or level 1 spells.
-function spellChoiceType(options) {
-	if (options.length && options.every(name => hasTag(name, "cantrip"))) return "cantrip";
-	if (options.length && options.every(name => hasTag(name, "level1spell"))) return "level1spell";
-	return null;
-}
-
-// Checks whether a choice selects cantrips or level 1 spells.
-function choiceIsSpellChoice(choice) {
-	return Boolean(spellChoiceType(getAttributes(choiceFilter(choice)).map(attribute => attribute.name)));
-}
-
-// Pluralizes a display label based on a count.
-function pluralizeChoiceLabel(label, count) {
-	if (count !== 1) return label;
-	return label
-		.replace(/skills$/, "skill")
-		.replace(/tools$/, "tool")
-		.replace(/instruments$/, "instrument")
-		.replace(/gaming sets$/, "gaming set")
-		.replace(/spells$/, "spell")
-		.replace(/cantrips$/, "cantrip");
-}
-
-// Formats a picked-count and pool-size pair for source summaries.
-function countPoolLabel(count, poolSize) {
-	return `${count}/${poolSize}`;
-}
-
-// Returns fixed names granted by a choice that are not already fixed.
-function choiceFixedNames(choice, fixed) {
-	let alternatives = featureAlternativesForChoice(choice, fixed);
-	if (alternatives.length !== 1) return [];
-	return alternatives[0]
-		.filter(feature => feature.count === feature.options.length)
-		.flatMap(feature => feature.options)
-		.filter(name => !fixed.has(name));
-}
-
-// Returns the extra choices granted by special origin feats.
-function specialFeatChoices(feat) {
-	if (feat === "Skilled") {
-		return [{ label: "proficiencies", count: 3, all: ["proficiency"] }];
-	}
-	if (feat === "Musician") {
-		return [{ label: "instruments", count: 3, all: ["instrument"] }];
-	}
-	if (feat === "Crafter") {
-		return [{ label: "artisan tools", count: 3, all: ["artisanTool"] }];
-	}
-	return [];
-}
-
-// Checks whether a feat can be selected from the current source state.
-function featIsAvailable(feat, grantedFeats) {
-	return REPEATABLE_FEATS.has(feat) || !grantedFeats.has(feat);
-}
-
-// Builds class spell-choice branches including class-order variants.
-function classSpellBranches(className, source, baseChoices) {
-	let branches = source?.branches;
-	if (!branches?.length) return [{ label: "Class spell choices", choices: [] }];
-
-	return branches.map(branch => {
-		let choices = [];
-		if (branch.extraCantrips) {
-			choices.push({
-				label: `${branch.name} extra cantrip`,
-				count: branch.extraCantrips.count,
-				all: ["cantrip", classTagFor(className)],
-				source: `Class: ${className}`
-			});
-		}
-		return { label: branch.name, choices };
+// checks if two choices are of the same type ie: 1/18 skills (for human) + 3/18 skills (for bard)
+function sameChoice(first, second) {
+	return JSON.stringify({
+		all: first.all || null,
+		any: first.any || null,
+		not: first.not || null
+	}) === JSON.stringify({
+		all: second.all || null,
+		any: second.any || null,
+		not: second.not || null
 	});
 }
 
-// Creates the visible label for a calculation branch.
-function branchDisplayLabel(branch) {
-	let parts = branch.displayParts || [];
-	if (parts.length) return parts.join("; ");
-	return branch.displayLabel || "";
-}
+function addModifiers(requirements, merged) {
+	merged.modifiers = {factors: []};
 
-// Adds one label part to a branch without mutating it.
-function branchWithDisplayPart(branch, part) {
-	if (!part) return branch;
-	return {
-		...branch,
-		displayParts: [...(branch.displayParts || []), part],
-		displayLabel: [...(branch.displayParts || []), part].join("; ")
-	};
-}
-
-// Adds a branch-scoped modifier without mutating the branch.
-function branchWithDisplayModifier(branch, sourceKey, modifier) {
-	if (!sourceKey) return branch;
-	let existingSourceModifiers = branch.sourceBranchModifiers || {};
-	return {
-		...branch,
-		sourceBranchModifiers: {
-			...existingSourceModifiers,
-			[sourceKey]: [
-				...(existingSourceModifiers[sourceKey] || []),
-				modifier
-			]
-		}
-	};
-}
-
-// Applies a granted feat to every branch.
-function applyGrantedFeatToBranches(branches, feat, source, labelPrefix) {
-	let sourceName = labelPrefix.replace(/^(Background|Race|Class):\s*/, "");
-	if (feat === "Magic Initiate") {
-		let lists = magicInitiateListsFromSource(source);
-		return branches.flatMap(branch => lists
-			.filter(list => !branch.magicInitiateLists.has(list))
-			.map(list => {
-				let magicInitiateBranch = branchWithDisplayPart({
-						...branch,
-						label: `${branch.label}; ${labelPrefix} Magic Initiate ${list}`,
-						choices: branch.choices.concat(magicInitiateChoices(list)),
-						spellcastingAbility: branch.spellcastingAbility * 3n,
-						magicInitiateLists: new Set([...branch.magicInitiateLists, list])
-					},
-					`${sourceName} Magic Initiate ${titleCase(list)}`
-				);
-				return branchWithDisplayModifier(magicInitiateBranch, labelPrefix, {
-					label: "spellcasting ability",
-					value: 3n,
-					displayOnly: true
-				});
-			})
-		);
-	}
-
-	let choices = specialFeatChoices(feat);
-	if (!choices.length) return branches;
-	return branches.map(branch => branchWithDisplayPart({
-			...branch,
-			label: `${branch.label}; ${labelPrefix} ${feat}`,
-			choices: branch.choices.concat(choices)
-		},
-		`${sourceName} ${feat}`
-	));
-}
-
-// Expands branches for source choices that create variants.
-function applySourceChoiceBranches(branches, source, sourceKey) {
-	if (sourceKey.startsWith("Class: ")) return branches;
-	let choiceBranches = source?.branches;
-	if (!choiceBranches?.length) return branches;
-	let sourceName = sourceKey.replace(/^(Background|Race|Class):\s*/, "");
-
-	return branches.flatMap(branch => choiceBranches.map(choiceBranch => {
-		let choices = (choiceBranch.choices || []).map(choice => ({
-			...choice,
-			source: sourceKey
-		}));
-		let fixed = choiceBranch.fixed || [];
-		let modifierEntries = Object.entries(choiceBranch.modifiers || {})
-			.map(([label, value]) => ({ label, value: BigInt(value) }));
-		let modifierWeight = modifierEntries.reduce((total, modifier) => total * modifier.value, 1n);
-		let existingSourceChoices = branch.sourceBranchChoices || {};
-		let existingSourceFixed = branch.sourceBranchFixed || {};
-		let existingSourceModifiers = branch.sourceBranchModifiers || {};
-		let branched = branchWithDisplayPart({
-				...branch,
-				label: `${branch.label}; ${sourceKey} ${choiceBranch.name}`
-			},
-			choiceBranch.displayLabel || `${sourceName}, ${choiceBranch.name}`
-		);
-		return {
-			...branched,
-			choices: branch.choices.concat(choices),
-			magicInitiateLists: new Set(branch.magicInitiateLists),
-			sourceBranchChoices: {
-				...existingSourceChoices,
-				[sourceKey]: [
-					...(existingSourceChoices[sourceKey] || []),
-					...choices
-				]
-			},
-			sourceBranchFixed: {
-				...existingSourceFixed,
-				[sourceKey]: [
-					...(existingSourceFixed[sourceKey] || []),
-					...fixed
-				]
-			},
-			sourceBranchModifiers: {
-				...existingSourceModifiers,
-				[sourceKey]: [
-					...(existingSourceModifiers[sourceKey] || []),
-					...modifierEntries
-				]
-			},
-			sourceBranchModifierWeight: (branch.sourceBranchModifierWeight || 1n) * modifierWeight
-		};
-	}));
-}
-
-// Builds branches for one human origin feat choice.
-function originFeatBranches(baseBranch, feat, labelPrefix, choices, displayParts = [], originSourceKey = null) {
-	if (feat === "Magic Initiate") {
-		return MAGIC_INITIATE_LISTS
-			.map(normalizeMagicInitiateList)
-			.filter(list => !baseBranch.magicInitiateLists.has(list))
-			.map(list => {
-				let originFeatChoices = magicInitiateChoices(list);
-					let branch = {
-						label: `${labelPrefix}; Origin feat: Magic Initiate ${list}`,
-						displayParts: displayParts.concat(`Origin Feat: Magic Initiate ${titleCase(list)}`),
-						displayLabel: displayParts.concat(`Origin Feat: Magic Initiate ${titleCase(list)}`).join("; "),
-						choices: choices.concat(originFeatChoices),
-						originFeatChoices,
-						spellcastingAbility: baseBranch.spellcastingAbility * 3n,
-						magicInitiateLists: new Set([...baseBranch.magicInitiateLists, list]),
-						sourceBranchChoices: baseBranch.sourceBranchChoices || {},
-						sourceBranchFixed: baseBranch.sourceBranchFixed || {},
-						sourceBranchModifiers: baseBranch.sourceBranchModifiers || {},
-						sourceBranchModifierWeight: baseBranch.sourceBranchModifierWeight || 1n
-					};
-					return branchWithDisplayModifier(branch, originSourceKey, {
-						label: "spellcasting ability",
-						value: 3n,
-						displayOnly: true
-					});
-				});
-	}
-
-	let originFeatChoices = specialFeatChoices(feat);
-	return [{
-		label: `${labelPrefix}; Origin feat: ${feat}`,
-		displayParts: displayParts.concat(`Origin Feat: ${feat}`),
-		displayLabel: displayParts.concat(`Origin Feat: ${feat}`).join("; "),
-		choices: choices.concat(originFeatChoices),
-		originFeatChoices,
-		spellcastingAbility: baseBranch.spellcastingAbility,
-		magicInitiateLists: new Set(baseBranch.magicInitiateLists),
-		sourceBranchChoices: baseBranch.sourceBranchChoices || {},
-		sourceBranchFixed: baseBranch.sourceBranchFixed || {},
-		sourceBranchModifiers: baseBranch.sourceBranchModifiers || {},
-		sourceBranchModifierWeight: baseBranch.sourceBranchModifierWeight || 1n
-	}];
-}
-
-// Checks whether an origin feat has no special counted choices.
-function isPlainOriginFeat(feat) {
-	return feat !== "Magic Initiate" && specialFeatChoices(feat).length === 0;
-}
-
-// Builds the summarized normal-origin-feat branch.
-function plainOriginFeatBranch(baseBranch, count, labelPrefix, choices, displayParts = []) {
-	return {
-		label: `${labelPrefix}; ${count} normal origin feats`,
-		displayParts: displayParts.concat(`${count} Normal Origin Feats`),
-		displayLabel: displayParts.concat(`${count} Normal Origin Feats`).join("; "),
-		choices,
-		originFeatChoices: [],
-		spellcastingAbility: baseBranch.spellcastingAbility,
-		magicInitiateLists: new Set(baseBranch.magicInitiateLists),
-		branchMultiplier: BigInt(count),
-		sourceBranchChoices: baseBranch.sourceBranchChoices || {},
-		sourceBranchFixed: baseBranch.sourceBranchFixed || {},
-		sourceBranchModifiers: baseBranch.sourceBranchModifiers || {},
-		sourceBranchModifierWeight: baseBranch.sourceBranchModifierWeight || 1n
-	};
-}
-
-// Moves choices with only one possible outcome into fixed selections.
-function promoteForcedChoices(choices, fixed) {
-	let forcedBySource = new Map();
-	let changed = true;
-
-	while (changed) {
-		changed = false;
-		for (let choice of choices) {
-			if (choice.forcePromoted) continue;
-			let alternatives = featureAlternativesForChoice(choice, fixed);
-			if (alternatives.length === 1 && alternatives[0].some(feature => feature.forceListed)) {
-				let listedFeatures = alternatives[0].filter(feature => feature.forceListed);
-				let replacementFeatures = alternatives[0].filter(feature => !feature.forceListed);
-				let sourceKey = choice.source || "Choice";
-				if (!forcedBySource.has(sourceKey)) forcedBySource.set(sourceKey, []);
-				for (let feature of listedFeatures) {
-					if (feature.options.length !== feature.count) continue;
-					for (let option of feature.options) {
-						if (fixed.has(option)) continue;
-						fixed.add(option);
-						forcedBySource.get(sourceKey).push(option);
-						changed = true;
-					}
-				}
-				if (changed && replacementFeatures.length === 1) {
-					let replacement = replacementFeatures[0];
-					choice.count = replacement.count;
-					choice.from = replacement.from;
-					choice.label = choiceDisplayLabel(choice);
-					choice.replacementOnly = true;
-				}
-				continue;
-			}
-			if (alternatives.length !== 1 || alternatives[0].length !== 1) continue;
-
-			let feature = alternatives[0][0];
-			if (feature.options.length !== feature.count) continue;
-
-			choice.forcePromoted = true;
-			let sourceKey = choice.source || "Choice";
-			if (!forcedBySource.has(sourceKey)) forcedBySource.set(sourceKey, []);
-			for (let option of feature.options) {
-				if (fixed.has(option)) continue;
-				fixed.add(option);
-				forcedBySource.get(sourceKey).push(option);
-				changed = true;
+	for (let group of Object.values(requirements)) {
+		for (let modifier in group.modifiers || {}) {
+			let value = group.modifiers[modifier];
+			merged.modifiers.factors.push(value);
+			if (merged.modifiers[modifier]) {
+				merged.modifiers[modifier] *= value;
+			} else {
+				merged.modifiers[modifier] = value;
 			}
 		}
 	}
 
-	return forcedBySource;
+	merged.modifiers.totalProduct = merged.modifiers.factors.reduce((product, value) => product * BigInt(value), 1n);
 }
 
-// SECTION: Main Calculation Pipeline
-// Collects fixed grants, direct choices, granted feats, and static modifiers.
-function collectBaseCalculationState(sources) {
-	let fixed = new Set();
-	let grantedFeats = new Set();
-	let baseChoices = [];
-	let suppressedFixedBySource = new Map();
-	let staticWeight = 1n;
+function addExpertise(requirements, merged) {
+	let expertiseCount = requirements.class.expertise?.count;
+	if (!expertiseCount) return;
 
-	for (let entry of sources) {
-		let sourceKey = `${entry.kind}: ${entry.name}`;
-		for (let name of entry.source.fixed || []) {
-			if (fixed.has(name) && isSkill(name)) {
-				if (!suppressedFixedBySource.has(sourceKey)) suppressedFixedBySource.set(sourceKey, []);
-				suppressedFixedBySource.get(sourceKey).push(name);
-				baseChoices.push({
-					count: 1,
-					all: ["skill"],
-					source: sourceKey,
-					generatedReplacement: true,
-					replacementOnly: true
-				});
-				continue;
-			}
-			fixed.add(name);
-		}
-		for (let feat of featsFromSource(entry.source)) grantedFeats.add(feat);
-		for (let choice of entry.source.choices || []) {
-			baseChoices.push({ ...choice, source: sourceKey });
-		}
-		staticWeight *= modifierEntries(entry.source)
-			.reduce((total, modifier) => total * modifier.value, 1n);
-	}
-
-	let forcedBySource = promoteForcedChoices(baseChoices, fixed);
-	return {
-		fixed,
-		grantedFeats,
-		baseChoices: baseChoices.filter(choice => !choice.forcePromoted),
-		suppressedFixedBySource,
-		staticWeight,
-		forcedBySource
-	};
-}
-
-// Applies source-granted feats and source variant branches.
-function expandSourceBranches(sources) {
-	let branches = [{
-		label: "Base",
-		choices: [],
-		spellcastingAbility: 1n,
-		magicInitiateLists: new Set(),
-		displayParts: [],
-		sourceBranchChoices: {},
-		sourceBranchFixed: {},
-		sourceBranchModifiers: {},
-		sourceBranchModifierWeight: 1n
-	}];
-	for (let entry of sources) {
-		let sourceKey = `${entry.kind}: ${entry.name}`;
-		for (let feat of featsFromSource(entry.source)) {
-			branches = applyGrantedFeatToBranches(branches, feat, entry.source, sourceKey);
-		}
-		branches = applySourceChoiceBranches(branches, entry.source, sourceKey);
-	}
-	return branches;
-}
-
-// Combines source branches, class-order spell branches, and origin-feat branches.
-function expandCalculationBranches({ sources, baseBranches, baseChoices, grantedFeats, className }) {
-	let classSource = sourceByName(CLASSES, className);
-	let classSourceKey = `Class: ${className}`;
-	let classSpellChoices = baseChoices.filter(choice =>
-		choice.source === classSourceKey && choiceIsSpellChoice(choice)
-	);
-	let spellBranches = classSpellBranches(className, classSource, classSpellChoices);
-	let originEntry = sources.find(entry => entry.source.originFeatChoice);
-	let originChoice = originEntry?.source.originFeatChoice;
-	let originSourceKey = originEntry ? `${originEntry.kind}: ${originEntry.name}` : null;
-	let branches = [];
-
-	for (let baseBranch of baseBranches) {
-		for (let spellBranch of spellBranches) {
-			let choices = baseChoices.concat(baseBranch.choices, spellBranch.choices);
-			let spellLabel = `${baseBranch.label}; ${spellBranch.label}`;
-			let displayParts = [
-				...(baseBranch.displayParts || []),
-				...(spellBranch.label !== "Class spell choices" ? [spellBranch.label] : [])
-			];
-			branches.push(...originExpandedBranches({
-				baseBranch,
-				choices,
-				spellLabel,
-				displayParts,
-				originChoice,
-				originSourceKey,
-				grantedFeats,
-				classSpellChoices: classSpellChoices.concat(spellBranch.choices)
-			}));
-		}
-	}
-	return { branches, classSource };
-}
-
-// Expands one combined branch through human origin-feat choices when present.
-function originExpandedBranches({
-	baseBranch,
-	choices,
-	spellLabel,
-	displayParts,
-	originChoice,
-	originSourceKey,
-	grantedFeats,
-	classSpellChoices
-}) {
-	if (!originChoice) {
-		return [{
-			label: spellLabel,
-			displayParts,
-			displayLabel: displayParts.join("; ") || undefined,
-			choices,
-			classSpellChoices,
-			spellcastingAbility: baseBranch.spellcastingAbility,
-			magicInitiateLists: new Set(baseBranch.magicInitiateLists),
-			branchMultiplier: 1n,
-			sourceBranchChoices: baseBranch.sourceBranchChoices || {},
-			sourceBranchFixed: baseBranch.sourceBranchFixed || {},
-			sourceBranchModifiers: baseBranch.sourceBranchModifiers || {},
-			sourceBranchModifierWeight: baseBranch.sourceBranchModifierWeight || 1n
-		}];
-	}
-
-	let branches = [];
-	let availableOriginFeats = (originChoice.options || ORIGIN_FEATS)
-		.filter(feat => featIsAvailable(feat, grantedFeats));
-	let plainOriginFeats = availableOriginFeats.filter(isPlainOriginFeat);
-	if (plainOriginFeats.length) {
-		branches.push({
-			...plainOriginFeatBranch(baseBranch, plainOriginFeats.length, spellLabel, choices, displayParts),
-			classSpellChoices
-		});
-	}
-	for (let feat of availableOriginFeats.filter(feat => !isPlainOriginFeat(feat))) {
-		branches.push(...originFeatBranches(
-			baseBranch,
-			feat,
-			spellLabel,
-			choices,
-			displayParts,
-			originSourceKey
-		).map(branch => ({ ...branch, classSpellChoices })));
-	}
-	return branches;
-}
-
-// Renders source columns for one branch row.
-function sourceRowsForBranch({ sources, branch, branchFixed, forcedBySource, suppressedFixedBySource }) {
-	return sources.map(entry => {
-		let sourceKey = `${entry.kind}: ${entry.name}`;
-		return describeSource(
-			entry,
-			branchFixed,
-			[
-				...(forcedBySource.get(sourceKey) || []),
-				...((branch.sourceBranchFixed || {})[sourceKey] || [])
-			],
-			entry.kind === "Class" ? branch.classSpellChoices : null,
-			suppressedFixedBySource.get(sourceKey) || [],
-			[
-				...branch.choices.filter(choice => choice.source === sourceKey && choice.generatedReplacement),
-				...((branch.sourceBranchChoices || {})[sourceKey] || []),
-				...(entry.source.originFeatChoice ? (branch.originFeatChoices || []) : [])
-			],
-			(branch.sourceBranchModifiers || {})[sourceKey] || []
-		);
-	});
-}
-
-// Calculates the visible branch rows and their pre-static branch total.
-function calculateBranchRows({ branches, sources, fixed, forcedBySource, suppressedFixedBySource, classSource, staticWeight }) {
-	let expertiseCount = classSource?.expertise?.count || 0;
-	let branchRows = [];
-	let branchTotal = 0n;
-
-	for (let branch of branches) {
-		let branchFixedNames = Object.values(branch.sourceBranchFixed || {}).flat();
-		let branchFixed = new Set([...fixed, ...branchFixedNames]);
-		let branchFixedSkillCount = [...branchFixed].filter(isSkill).length;
-		let featureAlternatives = featureAlternativesFromChoices(branch.choices, branchFixed);
-		let branchMultiplier = branch.branchMultiplier || 1n;
-		let sourceBranchModifierWeight = branch.sourceBranchModifierWeight || 1n;
-		let sourceRows = sourceRowsForBranch({
-			sources,
-			branch,
-			branchFixed,
-			forcedBySource,
-			suppressedFixedBySource
-		});
-		let bucketRows = expertiseBranchRows({
-			branch,
-			featureAlternatives,
-			branchFixedSkillCount,
-			expertiseCount,
-			branchMultiplier,
-			sourceBranchModifierWeight,
-			staticWeight,
-			sourceRows
-		});
-		if (bucketRows) {
-			branchRows.push(...bucketRows.rows);
-			branchTotal += bucketRows.total;
-			continue;
-		}
-
-		let row = standardBranchRow({
-			branch,
-			featureAlternatives,
-			branchFixedSkillCount,
-			expertiseCount,
-			branchMultiplier,
-			sourceBranchModifierWeight,
-			staticWeight,
-			sourceRows
-		});
-		branchRows.push(row.row);
-		branchTotal += row.total;
-	}
-	return { branchRows, branchTotal };
-}
-
-// Splits rogue expertise into rows when skilled choices can yield different skill counts.
-function expertiseBranchRows({
-	branch,
-	featureAlternatives,
-	branchFixedSkillCount,
-	expertiseCount,
-	branchMultiplier,
-	sourceBranchModifierWeight,
-	staticWeight,
-	sourceRows
-}) {
-	if (!expertiseCount || featureAlternatives.length !== 1) return null;
-	let expertiseBuckets = [...countDistinctChoicesBySkillCount(featureAlternatives[0]).entries()]
-		.filter(([, ways]) => ways > 0n)
-		.sort(([left], [right]) => left - right);
-	if (expertiseBuckets.length <= 1) return null;
-
-	let rows = [];
-	let total = 0n;
-	for (let [addedSkills, ways] of expertiseBuckets) {
-		let possibleSkills = branchFixedSkillCount + addedSkills;
-		let expertiseChoices = choose(possibleSkills, expertiseCount);
-		let choiceWeight = ways * expertiseChoices;
-		let weight = choiceWeight * branch.spellcastingAbility * branchMultiplier * sourceBranchModifierWeight;
-		let bucketData = expertiseBucketDisplayData(
-			featureComponents(featureAlternatives[0]),
-			branchFixedSkillCount,
-			addedSkills
-		);
-		let choiceFactors = [...bucketData.factors, expertiseChoices];
-		if (branchMultiplier !== 1n) choiceFactors.push(branchMultiplier);
-		total += weight;
-		rows.push({
-			label: expertiseBucketLabel(branch, possibleSkills),
-			spellcastingAbility: branch.spellcastingAbility,
-			branchMultiplier,
-			sourceBranchModifierWeight,
-			baseWeight: weight * staticWeight,
-			mathHtml: choiceMathHTMLForExpertiseBucket(featureAlternatives[0], branchFixedSkillCount, expertiseCount, addedSkills),
-			choiceFactors,
-			staticWeight,
-			sourceRows
-		});
-	}
-	return { rows, total };
-}
-
-// Builds a normal branch row without expertise bucket splitting.
-function standardBranchRow({
-	branch,
-	featureAlternatives,
-	branchFixedSkillCount,
-	expertiseCount,
-	branchMultiplier,
-	sourceBranchModifierWeight,
-	staticWeight,
-	sourceRows
-}) {
-	let choiceWeight = featureAlternatives.reduce(
-		(total, features) => total + choiceWeightWithExpertise(features, branchFixedSkillCount, expertiseCount),
-		0n
-	);
-	let weight = choiceWeight * branch.spellcastingAbility * branchMultiplier * sourceBranchModifierWeight;
-	let choiceFactors = alternativeChoiceFactors(featureAlternatives, branchFixedSkillCount, expertiseCount);
-	if (branchMultiplier !== 1n) choiceFactors.push(branchMultiplier);
-	return {
-		total: weight,
-		row: {
-			label: branchDisplayLabel(branch) || branch.label,
-			spellcastingAbility: branch.spellcastingAbility,
-			branchMultiplier,
-			sourceBranchModifierWeight,
-			baseWeight: weight * staticWeight,
-			mathHtml: alternativeMathHTML(featureAlternatives, branchFixedSkillCount, expertiseCount),
-			choiceFactors,
-			staticWeight,
-			sourceRows
-		}
-	};
-}
-
-// Calculates all branch rows and total weights for one selection.
-function calculate(backgroundName, raceName, className) {
-	let sources = [
-		{ kind: "Background", name: backgroundName, source: sourceByName(BACKGROUNDS, backgroundName) },
-		{ kind: "Race", name: raceName, source: sourceByName(RACES, raceName) },
-		{ kind: "Class", name: className, source: sourceByName(CLASSES, className) }
-	].filter(entry => entry.source);
-	let baseState = collectBaseCalculationState(sources);
-	let { branches, classSource } = expandCalculationBranches({
-		sources,
-		baseBranches: expandSourceBranches(sources),
-		baseChoices: baseState.baseChoices,
-		grantedFeats: baseState.grantedFeats,
-		className
-	});
-	let { branchRows, branchTotal } = calculateBranchRows({
-		branches,
-		sources,
-		fixed: baseState.fixed,
-		forcedBySource: baseState.forcedBySource,
-		suppressedFixedBySource: baseState.suppressedFixedBySource,
-		classSource,
-		staticWeight: baseState.staticWeight
-	});
-	let baseWeight = baseState.staticWeight * branchTotal;
-	let pointBuyWeight = BigInt(GLOBALS.pointBuyWeight);
-	let rolledAbilityScoreWeight = BigInt(GLOBALS.rolledAbilityScoreWeight);
-	let pointBuyGlobalWeight = GLOBAL_LANGUAGE_WEIGHT * pointBuyWeight;
-	let rolledGlobalWeight = GLOBAL_LANGUAGE_WEIGHT * rolledAbilityScoreWeight;
-
-	return {
-		backgroundName,
-		raceName,
-		className,
-		branchRows,
-		baseWeight,
-		globalWeight: pointBuyGlobalWeight,
-		finalWeight: baseWeight * pointBuyGlobalWeight,
-		pointBuyGlobalWeight,
-		rolledGlobalWeight,
-		rolledFinalWeight: baseWeight * rolledGlobalWeight,
-		globalLanguageWeight: GLOBAL_LANGUAGE_WEIGHT,
-		pointBuyWeight,
-		rolledAbilityScoreWeight
-	};
-}
-
-// SECTION: Choice Weights And Expertise Buckets
-// Counts choice weight including expertise choices when present.
-function choiceWeightWithExpertise(features, fixedSkillCount, expertiseCount) {
-	if (!expertiseCount) return countDistinctChoiceSets(features);
-
-	let bySkillCount = countDistinctChoicesBySkillCount(features);
-	let total = 0n;
-	for (let [addedSkills, ways] of bySkillCount.entries()) {
-		total += ways * choose(fixedSkillCount + addedSkills, expertiseCount);
-	}
-	return total;
-}
-
-// Builds the label for an expertise skill-count branch.
-function expertiseBucketLabel(branch, possibleSkills) {
-	let parentLabel = branchDisplayLabel(branch);
-	if (parentLabel) return `${parentLabel}, ${possibleSkills} Expertise Skills`;
-	return `${possibleSkills} Expertise Skills`;
-}
-
-// Renders math for all alternative feature sets in a branch.
-function alternativeMathHTML(featureAlternatives, fixedSkillCount, expertiseCount) {
-	if (featureAlternatives.length === 1) {
-		return choiceMathHTML(featureAlternatives[0], fixedSkillCount, expertiseCount);
-	}
-
-	let cases = featureAlternatives.map((features, index) => {
-		let value = choiceWeightWithExpertise(features, fixedSkillCount, expertiseCount);
-		return `
-			<div class="mathBlock">
-				<div class="mathTitle">Overlap Case ${index + 1}</div>
-				${choiceMathHTML(features, fixedSkillCount, expertiseCount)}
-				<div class="mathResult">case total = ${format(value)}</div>
-			</div>
-		`;
-	}).join("");
-	let total = featureAlternatives.reduce(
-		(sum, features) => sum + choiceWeightWithExpertise(features, fixedSkillCount, expertiseCount),
-		0n
-	);
-	return `${cases}<div class="mathResult">choice total = ${format(total)}</div>`;
-}
-
-// Builds the numeric factors for all alternative feature sets.
-function alternativeChoiceFactors(featureAlternatives, fixedSkillCount, expertiseCount) {
-	if (featureAlternatives.length !== 1) {
-		return [featureAlternatives.reduce(
-			(sum, features) => sum + choiceWeightWithExpertise(features, fixedSkillCount, expertiseCount),
-			0n
-		)];
-	}
-	return choiceFactors(featureAlternatives[0], fixedSkillCount, expertiseCount);
-}
-
-// Builds numeric choice factors for one feature set.
-function choiceFactors(features, fixedSkillCount, expertiseCount) {
-	let active = activeFeatures(features);
-	let factors = [];
-
-	for (let component of featureComponents(active)) {
-		factors.push(componentChoiceFactor(component, fixedSkillCount));
-	}
-
-	if (expertiseCount) {
-		let bySkillCount = countDistinctChoicesBySkillCount(active);
-		let entries = [...bySkillCount.entries()].filter(([, ways]) => ways > 0n);
-		if (entries.length === 1) {
-			let [addedSkills] = entries[0];
-			factors.push(choose(fixedSkillCount + addedSkills, expertiseCount));
-		}
-		else {
-			factors = [choiceWeightWithExpertise(active, fixedSkillCount, expertiseCount)];
-		}
-	}
-
-	return factors.filter(value => value !== 1n);
-}
-
-// Counts one independent choice component.
-function componentChoiceFactor(component, fixedSkillCount = 0) {
-	let specialData = componentRequirementData(component, fixedSkillCount);
-	if (specialData) return specialData.total;
-
-	if (component.length === 1) {
-		let feature = component[0];
-		return choose(feature.options.length, feature.count);
-	}
-
-	let firstOptions = component[0].options.join("\u0000");
-	let samePool = component.every(feature => feature.options.join("\u0000") === firstOptions);
-	if (samePool) {
-		let totalCount = component.reduce((sum, feature) => sum + feature.count, 0);
-		return choose(component[0].options.length, totalCount);
-	}
-
-	return countDistinctChoiceSets(component);
-}
-
-// Renders the math explanation for branch choices.
-function choiceMathHTML(features, fixedSkillCount, expertiseCount) {
-	let active = activeFeatures(features);
-
-	if (!active.length) {
-		return `<div class="mathLine"><span>No choices</span><strong>1</strong></div>`;
-	}
-
-	let components = featureComponents(active);
-	let html = choiceOverviewHTML(components, fixedSkillCount);
-	let skillComponents = components.filter(componentIsSkill);
-	let nonSkillComponents = components.filter(component => !componentIsSkill(component));
-
-	html += groupedComponentsMathHTML(skillComponents, fixedSkillCount, "skill");
-	html += nonSkillComponentsMathHTML(nonSkillComponents);
-
-	if (!expertiseCount) return html;
-
-	let bySkillCount = countDistinctChoicesBySkillCount(active);
-	let skillCountEntries = [...bySkillCount.entries()]
-		.filter(([, ways]) => ways > 0n)
-		.sort(([left], [right]) => left - right);
-	let terms = skillCountEntries
-		.map(([addedSkills, ways]) => {
-			let expertiseChoices = choose(fixedSkillCount + addedSkills, expertiseCount);
-			return `
-			<li>
-				<span>${fixedSkillCount + addedSkills}-skill bucket</span>
-				${renderFormula(`C(${fixedSkillCount + addedSkills}, ${expertiseCount})`, expertiseChoices)}
-			</li>
-		`;
-		});
-	let skillBucketTotal = [...bySkillCount.values()].reduce((sum, ways) => sum + ways, 0n);
-	let expertiseTotal = choiceWeightWithExpertise(active, fixedSkillCount, expertiseCount);
-
-	return html + expertiseMathBlock(terms.join(""), {
-		showTotals: skillCountEntries.length > 1,
-		skillBucketTotal,
-		expertiseTotal
-	});
-}
-
-// Renders non-skill components, combining independent same-type spell choices.
-function nonSkillComponentsMathHTML(components) {
-	return groupedIndependentComponents(components)
-		.map(component => componentRequirementMathHTML(component) || componentMathHTML(component))
-		.join("");
-}
-
-// Combines independent components when they share a homogeneous spell type.
-function groupedIndependentComponents(components) {
-	let groups = new Map();
-	let out = [];
-	for (let component of components) {
-		let key = homogeneousComponentType(component);
-		if (!key || (key !== "cantrip" && key !== "level1spell")) {
-			out.push(component);
-			continue;
-		}
-		if (!groups.has(key)) {
-			let group = [];
-			groups.set(key, group);
-			out.push(group);
-		}
-		groups.get(key).push(...component);
-	}
-	return out;
-}
-
-// Returns a component type when every option shares that type.
-function homogeneousComponentType(component) {
-	let options = component.flatMap(feature => feature.options || []);
-	if (options.length && options.every(name => hasTag(name, "cantrip"))) return "cantrip";
-	if (options.length && options.every(name => hasTag(name, "level1spell"))) return "level1spell";
-	if (options.length && options.every(name => hasTag(name, "language"))) return "language";
-	if (options.length && options.every(name => hasTag(name, "proficiency"))) return "proficiency";
-	return "";
-}
-
-// Renders math for a fixed expertise skill-count bucket.
-function choiceMathHTMLForExpertiseBucket(features, fixedSkillCount, expertiseCount, addedSkills) {
-	let active = activeFeatures(features);
-	let components = featureComponents(active);
-	let bucketData = expertiseBucketDisplayData(components, fixedSkillCount, addedSkills);
-	let possibleSkills = fixedSkillCount + addedSkills;
-	let expertiseChoices = choose(possibleSkills, expertiseCount);
-	return choiceOverviewHTML(components, fixedSkillCount, fixedSkillCount) + `
-		${bucketData.mathHtml}
-		${expertiseMathBlock(`
-			<li>
-				<span>expertise choices</span>
-				${renderFormula(`C(${possibleSkills}, ${expertiseCount})`, expertiseChoices)}
-			</li>
-		`)}
-	`;
-}
-
-// Renders the expertise math block for either all buckets or one fixed bucket.
-function expertiseMathBlock(termHtml, totals = {}) {
-	return `
-		<div class="mathBlock">
-			<div class="mathTitle">Expertise</div>
-			${totals.showTotals ? renderMathList([renderMathTotalRow("skill/proficiency sets by skill count", totals.skillBucketTotal)]) : ""}
-			${renderMathList([termHtml])}
-			${totals.showTotals ? renderMathList([renderMathTotalRow("skill/proficiency sets with expertise", totals.expertiseTotal)]) : ""}
-		</div>
-	`;
-}
-
-// Computes displayed totals for one expertise bucket.
-function expertiseBucketDisplayData(components, fixedSkillCount, addedSkills) {
-	let mathParts = [];
-	let factors = [];
-
-	for (let component of components) {
-		let bucket = skillCountBucketBreakdown(component, fixedSkillCount)
-			?.find(entry => entry.addedSkills === addedSkills);
-		if (bucket) {
-			let meta = bucketSkillMathMeta(component);
-			mathParts.push(`
-				<div class="mathBlock">
-					<div class="mathTitle">Skill Math${meta ? ` <span class="mathMeta">${escape(meta)}</span>` : ""}</div>
-					${skillBucketBreakdownHTML(bucket, false)}
-				</div>
-			`);
-			factors.push(bucket.total);
-			continue;
-		}
-
-		let factor = countDistinctChoiceSets(component);
-		if (factor !== 1n) {
-			mathParts.push(componentRequirementMathHTML(component) || componentMathHTML(component));
-			factors.push(factor);
-		}
-	}
-
-	let total = factors.reduce((product, factor) => product * factor, 1n);
-	return {
-		total,
-		factors,
-		mathHtml: mathParts.join("")
-	};
-}
-
-// Renders the rows inside a skill-count bucket.
-function skillBucketBreakdownHTML(bucket, includeSubhead = true) {
-	return `
-		${includeSubhead ? `<div class="mathSubhead">${bucket.totalSkills} Possible Proficient Skills</div>` : ""}
-		${renderMathList([
-			...bucket.terms,
-			renderMathTotalRow(`${bucket.totalSkills}-skill bucket`, bucket.total)
-		])}
-	`;
-}
-
-// Builds the pool summary for bucketed skill math.
-function bucketSkillMathMeta(component) {
-	let allOptions = [...new Set(component.flatMap(feature => feature.options || []))];
-	if (!allOptions.length) return "";
-	if (allOptions.every(isSkill)) {
-		return regionSummary(
-			componentOverlapRegions(component, sourceRegionLabel),
-			component,
-			sourceRegionLabel
-		);
-	}
-	return generalRegionMeta(component);
-}
-
-// Builds non-skill overlap-region metadata.
-function generalRegionMeta(component) {
-	return componentOverlapRegions(component)
-		.sort((left, right) => compareMathLabels(
-			generalRegionSummaryLabel(left.mask, component),
-			generalRegionSummaryLabel(right.mask, component)
-		))
-		.map(region => `${generalRegionSummaryLabel(region.mask, component)}: ${region.options.length}`)
-		.join(", ");
-}
-
-// Builds terms grouped by possible skill counts.
-function skillCountBucketBreakdown(features, fixedSkillCount) {
-	let active = activeFeatures(features);
-	if (!active.length || active.some(feature => feature.options.length < feature.count)) return null;
-
-	let components = featureComponents(active);
-	if (components.length !== 1) return null;
-
-	let component = components[0];
-	let totalPickCount = component.reduce((sum, feature) => sum + feature.count, 0);
-	let regions = componentOverlapRegions(component)
-		.map(region => ({
-			...region,
-			skills: region.options.filter(isSkill),
-			others: region.options.filter(option => !isSkill(option)),
-			...bucketRegionLabel(region.mask, component)
-		}))
-		.sort((left, right) => compareMathLabels(left.baseLabel, right.baseLabel));
-	let picked = new Map();
-	let chosenParts = [];
-	let buckets = new Map();
-
-	function addBucket(skillCount, term) {
-		if (!buckets.has(skillCount)) buckets.set(skillCount, []);
-		buckets.get(skillCount).push(term);
-	}
-
-	function visit(index, pickedCount, skillPicked, ways) {
-		if (index === regions.length) {
-			if (pickedCount !== totalPickCount || !regionPicksCanAssign(picked, regions, component)) return;
-			let activeParts = sortedMathParts(chosenParts.filter(part => part.count > 0));
-			addBucket(skillPicked, {
-				value: ways,
-				formula: activeParts
-					.map(part => `C(${part.poolSize}, ${part.count})`)
-					.join(" x "),
-				label: activeParts
-					.map(part => countedRegionLabel(part.count, part.label))
-					.join(", ")
-			});
-			return;
-		}
-
-		let region = regions[index];
-		let regionSize = region.skills.length + region.others.length;
-		let maxPick = Math.min(regionSize, totalPickCount - pickedCount);
-		for (let skillPick = 0; skillPick <= Math.min(region.skills.length, maxPick); skillPick++) {
-			let maxOtherPick = Math.min(region.others.length, maxPick - skillPick);
-			for (let otherPick = 0; otherPick <= maxOtherPick; otherPick++) {
-				let pick = skillPick + otherPick;
-				picked.set(region.mask, pick);
-				chosenParts.push(
-					{ count: skillPick, poolSize: region.skills.length, label: region.skillLabel },
-					{ count: otherPick, poolSize: region.others.length, label: region.otherLabel }
-				);
-				visit(
-					index + 1,
-					pickedCount + pick,
-					skillPicked + skillPick,
-					ways * choose(region.skills.length, skillPick) * choose(region.others.length, otherPick)
-				);
-				chosenParts.pop();
-				chosenParts.pop();
-			}
-		}
-		picked.delete(region.mask);
-	}
-
-	visit(0, 0, 0, 1n);
-
-	return [...buckets.entries()]
-		.sort(([left], [right]) => left - right)
-		.map(([addedSkills, terms]) => ({
-			addedSkills,
-			totalSkills: fixedSkillCount + addedSkills,
-			terms,
-			total: terms.reduce((sum, term) => sum + term.value, 0n)
-		}));
-}
-
-// Formats a region label inside skill-count buckets.
-function bucketRegionLabel(mask, component) {
-	let baseLabel = componentIsProficiency(component)
-		? generalRegionLabel(mask, component)
-		: sourceRegionLabel(mask, component);
-	let genericSkillLabel = genericSkillRegionLabel(component);
-	return {
-		baseLabel,
-		skillLabel: baseLabel === "proficiencies" || baseLabel === "other proficiencies" || baseLabel === "skills"
-			? genericSkillLabel
-			: baseLabel,
-		otherLabel: baseLabel === "proficiencies" || baseLabel === "other proficiencies"
-			? "other proficiencies"
-			: baseLabel
-	};
-}
-
-// Returns the generic label for unconstrained skill regions.
-function genericSkillRegionLabel(component) {
-	let constrainedSkillNames = constrainedSkillRegionNames(component);
-	if (!constrainedSkillNames.length) return "skills";
-	return "other skills";
-}
-
-// Lists named skill constraints in a component.
-function constrainedSkillRegionNames(component) {
-	let names = component
-		.map(featureRegionDescriptor)
-		.filter(descriptor =>
-			descriptor.kind === "skill" &&
-			descriptor.key !== "general-skills"
-		)
-		.map(descriptor => descriptor.summary)
-		.filter(Boolean);
-	return [...new Set(names)].sort();
-}
-
-// Assigns display priority to math labels.
-function mathLabelPriority(label) {
-	let normalized = String(label || "").toLowerCase();
-	if (normalized === "shared") return 10;
-	if (normalized.endsWith(" skills") && normalized !== "other skills") return 10;
-	if (normalized === "skills") return 10;
-	if (normalized === "other" || normalized === "other skills" || normalized === "general") return 15;
-	if (normalized === "other proficiencies" || normalized === "proficiencies") return 40;
-	return 20;
-}
-
-// Sorts math labels by priority and text.
-function compareMathLabels(left, right) {
-	let priority = mathLabelPriority(left) - mathLabelPriority(right);
-	return priority || String(left).localeCompare(String(right));
-}
-
-// Sorts math term parts into a readable order.
-function sortedMathParts(parts) {
-	return [...parts].sort((left, right) =>
-		compareMathLabels(left.label, right.label)
-	);
-}
-
-// SECTION: Requirement Overview Rendering
-// Renders the remaining-requirements overview box.
-function choiceOverviewHTML(components, fixedSkillCount, baseFixedSkillCount = 0) {
-	let remainingLines = [];
-	for (let line of skillOverviewLines(components, fixedSkillCount)) {
-		remainingLines.push({ group: "skills", line });
-	}
-
-	for (let component of components) {
-		if (componentIsSkill(component)) continue;
-		let taggedData = componentRequirementData(component);
-		if (taggedData) {
-			remainingLines.push(...requirementLinesForData(taggedData));
-			continue;
-		}
-		let proficiencyData = proficiencyRequirementData(component);
-		if (proficiencyData) {
-			remainingLines.push(...proficiencyData.lines.map(line => ({ group: overviewRequirementGroup(line), line })));
-			continue;
-		}
-
-		let firstOptions = component[0].options.join("\u0000");
-		let samePool = component.every(feature => feature.options.join("\u0000") === firstOptions);
-		let count = component.reduce((sum, feature) => sum + feature.count, 0);
-		if (samePool) {
-			remainingLines.push({ group: overviewFeatureGroup(component[0]), line: `${count} ${overviewFeatureLabel(component[0], count)}` });
-		}
-		else {
-			for (let feature of component) {
-				remainingLines.push({ group: overviewFeatureGroup(feature), line: `${feature.count} ${overviewFeatureLabel(feature, feature.count)}` });
-			}
-		}
-	}
-
-	return `
-		<div class="mathBlock">
-			<div class="mathTitle">Remaining Requirements</div>
-			${overviewSection(sortOverviewLines(mergeOverviewLines(remainingLines)))}
-		</div>
-	`;
-}
-
-// Checks whether a component contains only skill choices.
-function componentIsSkill(component) {
-	return component.every(feature => feature.options.every(isSkill));
-}
-
-// Summarizes skill requirements for the overview box.
-function skillOverviewLines(components, fixedSkillCount) {
-	let skillComponents = components.filter(componentIsSkill);
-	if (!skillComponents.length) return [];
-
-	let mandatoryNames = new Set();
-	let lines = [];
-
-	for (let component of skillComponents) {
-		for (let feature of component) {
-			if (feature.options.length === feature.count) {
-				for (let option of feature.options) mandatoryNames.add(option);
-				continue;
-			}
-			let constraint = skillFeatureConstraint(feature);
-			if (constraint) lines.push(constraint);
-			else lines.push(`${feature.count} ${pluralizeChoiceLabel("skills", feature.count)}`);
-		}
-	}
-
-	return lines;
-}
-
-// Merges duplicate overview requirements such as multiple generic skill lines.
-function mergeOverviewLines(lines) {
-	let byKey = new Map();
-	let passthrough = [];
-	for (let entry of lines) {
-		let parsed = parseOverviewCount(entry.line);
-		if (!parsed) {
-			passthrough.push(entry);
-			continue;
-		}
-		let key = `${entry.group}|${parsed.label}`;
-		let current = byKey.get(key) || { group: entry.group, count: 0, label: parsed.label };
-		current.count += parsed.count;
-		byKey.set(key, current);
-	}
-	let merged = [...byKey.values()].map(entry => ({
-		group: entry.group,
-		line: `${entry.count} ${pluralizeChoiceLabel(entry.label, entry.count)}`
-	}));
-	return [...merged, ...passthrough];
-}
-
-// Parses simple overview lines that start with a count.
-function parseOverviewCount(line) {
-	let match = String(line).match(/^(\d+)\s+(.+)$/);
-	if (!match) return null;
-	return {
-		count: Number(match[1]),
-		label: normalizeOverviewLabel(match[2])
-	};
-}
-
-// Normalizes singular/plural overview labels before merging counted lines.
-function normalizeOverviewLabel(label) {
-	return String(label)
-		.replace(/\bskill\b/g, "skills")
-		.replace(/\bcantrip\b/g, "cantrips")
-		.replace(/\bspell\b/g, "spells")
-		.replace(/\btool\b/g, "tools")
-		.replace(/\binstrument\b/g, "instruments")
-		.replace(/\bgaming set\b/g, "gaming sets");
-}
-
-// Converts tagged requirement data into remaining-requirement lines.
-function requirementLinesForData(data) {
-	if (data.typeLabelPlural) {
-		return mergedSpellRequirements(data).map(requirement => ({
-			group: data.typeLabelPlural,
-			line: `${requirement.count} ${requirement.listName} ${pluralizeChoiceLabel(data.typeLabelPlural, requirement.count)}`
-		}));
-	}
-	if (data.className && data.atLeastClass) {
-		return [{
-			group: "skills",
-			line: `${data.atLeastClass} ${data.className} ${pluralizeChoiceLabel("skills", data.atLeastClass)}`
-		}];
-	}
-
-	let lines = [];
-	if (data.artisanCount) {
-		lines.push({ group: "tools", line: `${data.artisanCount} artisan ${pluralizeChoiceLabel("tools", data.artisanCount)}` });
-	}
-	if (data.instrumentCount) {
-		lines.push({ group: "tools", line: `${data.instrumentCount} ${pluralizeChoiceLabel("instruments", data.instrumentCount)}` });
-	}
-	if (data.mixedCount) {
-		lines.push({ group: "tools", line: `${data.mixedCount} artisan ${pluralizeChoiceLabel("tools", data.mixedCount)} or ${pluralizeChoiceLabel("instruments", data.mixedCount)}` });
-	}
-	return lines;
-}
-
-// Extracts a short source name from a feature label.
-function featureSourceName(feature) {
-	let source = feature.source || "";
-	let match = source.match(/^(Background|Race|Class|Feat):\s*(.+)$/);
-	return match?.[2] || "";
-}
-
-// Returns required tags from a choice filter.
-function filterAllTags(filter) {
-	return Array.isArray(filter?.tags) ? filter.tags : filter?.tags?.all || filter?.all || [];
-}
-
-// Returns non-generic skill tags required by a feature.
-function specificSkillTags(feature) {
-	return filterAllTags(feature.from).filter(tag => tag !== "skill");
-}
-
-// Checks whether a feature chooses any skill.
-function featureIsAnySkillChoice(feature) {
-	let tags = filterAllTags(feature.from);
-	return tags.length === 1 &&
-		tags[0] === "skill";
-}
-
-// Finds the named skill constraint for a feature.
-function skillFeatureConstraint(feature) {
-	if (featureIsAnySkillChoice(feature)) return "";
-	let sourceName = featureSourceName(feature);
-	if ((feature.source || "").startsWith("Class: ")) {
-		let classTag = classTagFor(sourceName);
-		if (specificSkillTags(feature).includes(classTag)) {
-			return `${feature.count} ${sourceName} ${pluralizeChoiceLabel("skills", feature.count)}`;
-		}
-		return "";
-	}
-	let specificTags = specificSkillTags(feature);
-	if (sourceName && specificTags.length) {
-		return `${feature.count} ${sourceName} ${pluralizeChoiceLabel("skills", feature.count)}`;
-	}
-	return "";
-}
-
-// Combines spell requirements with matching spell lists.
-function mergedSpellRequirements(spellData) {
-	let byKey = new Map();
-	for (let requirement of spellData.requirements) {
-		let key = `${requirement.listName}|${spellData.typeLabelPlural}`;
-		let current = byKey.get(key) || {
-			listName: requirement.listName,
-			count: 0
-		};
-		current.count += requirement.count;
-		byKey.set(key, current);
-	}
-	return [...byKey.values()];
-}
-
-// Renders one overview section from text lines.
-function overviewSection(lines) {
-	let items = lines.length ? lines : ["none"];
-	let lastGroup = null;
-	return `
-		<ul class="overviewList">
-			${items.map(line => {
-				if (typeof line === "string") return `<li><span>${escape(line)}</span></li>`;
-				let startsGroup = line.group && lastGroup && line.group !== lastGroup;
-				lastGroup = line.group || lastGroup;
-				return `<li${startsGroup ? ` class="overviewGroupStart"` : ""}><span>${escape(line.line)}</span></li>`;
-			}).join("")}
-		</ul>
-	`;
-}
-
-// Chooses the overview group for a feature line.
-function overviewFeatureGroup(feature) {
-	return featureCategory(feature).overviewGroup;
-}
-
-// Formats one feature line for the overview.
-function overviewFeatureLabel(feature, count) {
-	let label = feature.label.toLowerCase();
-	let sourceName = featureSourceName(feature);
-	let source = sourceName ? `${sourceName} ` : "";
-
-	if (label.includes("cantrip")) return `${source}${pluralizeChoiceLabel("cantrips", count)}`;
-	if (label.includes("level 1")) return `${source}level 1 ${pluralizeChoiceLabel("spells", count)}`;
-	if (label.includes("instrument")) return `${pluralizeChoiceLabel("instruments", count)}`;
-	if (label.includes("gamingset")) return `${pluralizeChoiceLabel("gaming sets", count)}`;
-	if (label.includes("artisan")) return `artisan ${pluralizeChoiceLabel("tools", count)}`;
-	if (label.includes("skill")) return `${pluralizeChoiceLabel("skills", count)}`;
-	return pluralizeChoiceLabel(label, count);
-}
-
-// Checks whether a component contains only proficiencies.
-function componentIsProficiency(component) {
-	return component.every(feature =>
-		feature.options.every(name => hasTag(name, "proficiency"))
-	);
-}
-
-// Builds overview data for proficiency requirements.
-function proficiencyRequirementData(component) {
-	if (!componentIsProficiency(component) || !component.some(feature => feature.options.some(isSkill))) {
-		return null;
-	}
-	let totalCount = component.reduce((sum, feature) => sum + feature.count, 0);
-	let lines = [];
-	let skillFeatures = component.filter(feature => feature.options.every(isSkill));
-	lines.push(...mergeRequirementLines(
-		skillFeatures.flatMap(feature => proficiencyFeatureRequirementParts(feature))
-	));
-	lines.push(...mergeRequirementLines(
-		component
-			.filter(feature => !feature.options.every(isSkill))
-			.flatMap(feature => proficiencyFeatureRequirementParts(feature))
-	));
-	return {
-		line: `${totalCount} ${pluralizeChoiceLabel("proficiencies", totalCount)}`,
-		lines: lines.length ? lines : [`${totalCount} ${pluralizeChoiceLabel("proficiencies", totalCount)}`]
-	};
-}
-
-// Formats requirement lines for one proficiency feature.
-function proficiencyFeatureRequirementLines(feature) {
-	return proficiencyFeatureRequirementParts(feature).map(part => requirementPartLine(part));
-}
-
-// Builds requirement parts for one proficiency feature.
-function proficiencyFeatureRequirementParts(feature) {
-	if (feature.options.every(isSkill)) {
-		let constraint = skillFeatureConstraint(feature);
-		return [{
-			key: constraint || "skills",
-			count: feature.count,
-			label: count => constraint
-				? constraint
-				: `${count} ${pluralizeChoiceLabel("skills", count)}`
-		}];
-	}
-	let sharedTag = sharedProficiencyTag(feature.options, ["artisanTool", "instrument", "gamingSet", "tool"]);
-	if (sharedTag) {
-		let label = PROFICIENCY_POOL_LABELS[sharedTag];
-		return [{ key: label, count: feature.count, label: count => `${count} ${pluralizeChoiceLabel(label, count)}` }];
-	}
-	return [{ key: "proficiencies", count: feature.count, label: count => `${count} ${pluralizeChoiceLabel("proficiencies", count)}` }];
-}
-
-// Merges matching requirement parts into readable lines.
-function mergeRequirementLines(parts) {
-	let byKey = new Map();
-	for (let part of parts) {
-		let current = byKey.get(part.key) || { ...part, count: 0 };
-		current.count += part.count;
-		byKey.set(part.key, current);
-	}
-	return [...byKey.values()].map(requirementPartLine);
-}
-
-// Formats one requirement part line.
-function requirementPartLine(part) {
-	return part.label(part.count);
-}
-
-// Chooses the overview group for an already formatted requirement line.
-function overviewRequirementGroup(line) {
-	if (/\bskill\b|\bskills\b/.test(line)) return "skills";
-	if (/\btool\b|\btools\b|\binstrument\b|\binstruments\b|\bgaming set\b|\bgaming sets\b/.test(line)) return "tools";
-	if (/\bcantrip\b|\bcantrips\b/.test(line)) return "cantrips";
-	if (/\bspell\b|\bspells\b/.test(line)) return "level 1 spells";
-	return "proficiencies";
-}
-
-// Sorts overview lines by type and puts specific requirements before generic ones.
-function sortOverviewLines(lines) {
-	let groupOrder = {
-		skills: 0,
-		tools: 1,
-		proficiencies: 2,
-		cantrips: 3,
-		"level 1 spells": 4,
-		other: 5
-	};
-	return [...lines].sort((left, right) => {
-		let leftGroup = typeof left === "string" ? "other" : left.group || "other";
-		let rightGroup = typeof right === "string" ? "other" : right.group || "other";
-		let groupDiff = (groupOrder[leftGroup] ?? 99) - (groupOrder[rightGroup] ?? 99);
-		if (groupDiff) return groupDiff;
-		return overviewLineSpecificity(right) - overviewLineSpecificity(left);
-	});
-}
-
-// Scores whether an overview line names a specific source or only a generic pool.
-function overviewLineSpecificity(line) {
-	let text = typeof line === "string" ? line : line.line || "";
-	if (/\b(skill|skills|proficiency|proficiencies)\b/.test(text) && /^\d+\s+(skill|skills|proficiency|proficiencies)$/.test(text)) {
-		return 0;
-	}
-	if (/artisan tool or instrument/.test(text)) return 0;
-	return 1;
-}
-
-// SECTION: Reusable Math Rendering Helpers
-// Renders the left label column of a math row.
-function renderMathTermLabel(label) {
-	let parts = String(label)
-		.split(/\s*,\s*/g)
-		.map(part => part.trim())
-		.filter(Boolean);
-	if (!parts.length) parts = [label];
-	return `
-		<span class="mathTermLabel">
-			${parts.map(part => `<span>${escape(part)}</span>`).join("")}
-		</span>
-	`;
-}
-
-// Renders a formula and its product value.
-function renderFormula(formula, value) {
-	let factors = String(formula || "")
-		.split(/\s+x\s+/)
-		.map(part => part.trim())
-		.filter(Boolean);
-	if (factors.length <= 1) {
-		return `
-			<code class="stackedFormula"><span>${escape(formula)}</span></code>
-			<span class="formulaProduct">${format(value)}</span>
-		`;
-	}
-	return `
-		<code class="stackedFormula">
-			${factors.map((factor, index) => `
-				<span>${escape(factor)}${index < factors.length - 1 ? " x" : ""}</span>
-			`).join("")}
-		</code>
-		<span class="formulaProduct">${format(value)}</span>
-	`;
-}
-
-// Builds a combination formula while omitting zero-pick factors.
-function combinationFormula(parts) {
-	let formula = parts
-		.filter(part => part.count > 0)
-		.map(part => `C(${part.poolSize}, ${part.count})`)
-		.join(" x ");
-	return formula || "1";
-}
-
-// Renders a highlighted formula product.
-function renderFormulaProduct(value) {
-	return `<span class="formulaProduct">${format(value)}</span>`;
-}
-
-// Renders a total row in a math block.
-function renderMathTotalRow(label, value) {
-	return `
-		<li>
-			<span>${escape(label)}</span>
-			<span class="formulaSpacer"></span>
-			${renderFormulaProduct(value)}
-		</li>
-	`;
-}
-
-// Renders one formula row in a math block.
-function renderMathTerm(term) {
-	return `
-		<li>
-			${renderMathTermLabel(term.label)}
-			${renderFormula(term.formula, term.value)}
-		</li>
-	`;
-}
-
-// Renders a math list from row HTML or term objects.
-function renderMathList(items) {
-	let rows = items.map(item => typeof item === "string" ? item : renderMathTerm(item)).join("");
-	return `<ul class="mathList">${rows}</ul>`;
-}
-
-// Renders a one-row math block.
-function renderSingleMathBlock(title, meta, label, formula, value) {
-	return `
-		<div class="mathBlock">
-			<div class="mathTitle">${escape(title)}${meta ? ` <span class="mathMeta">${escape(meta)}</span>` : ""}</div>
-			${renderMathList([{ label, formula, value }])}
-		</div>
-	`;
-}
-
-// Renders any math block backed by precomputed overlap-region terms.
-function renderRegionMathBlock(data) {
-	if (!data) return null;
-	if (!data.termHtml && data.terms.length === 1 && !data.alwaysShowTotal) {
-		let term = data.terms[0];
-		return renderSingleMathBlock(
-			data.title,
-			data.meta,
-			term.label,
-			term.formula,
-			term.value
-		);
-	}
-
-	let termList = data.termHtml ? renderMathList([data.termHtml]) : renderMathList(data.terms);
-	return `
-		<div class="mathBlock">
-			<div class="mathTitle">${escape(data.title)}${data.meta ? ` <span class="mathMeta">${escape(data.meta)}</span>` : ""}</div>
-			${termList}
-			${data.terms.length > 1 || data.alwaysShowTotal ? renderMathList([renderMathTotalRow(data.resultLabel, data.total)]) : ""}
-		</div>
-	`;
-}
-
-// SECTION: Math Block Routing And Region Math
-// Routes a component to the best math renderer.
-function componentMathHTML(component) {
-	if (component.length === 1) {
-		let feature = component[0];
-		let title = mathCategoryTitle(feature);
-		let label = title === "Tool Math"
-			? proficiencyFeatureRequirementLines(feature).join(", ")
-			: countedRegionLabel(feature.count, sourceRegionLabel(1, component));
-		return renderSingleMathBlock(
-			title,
-			singleFeatureMathMeta(feature) || singleComponentMathMeta(component),
-			label,
-			`C(${feature.options.length}, ${feature.count})`,
-			choose(feature.options.length, feature.count)
-		);
-	}
-
-	let firstOptions = component[0].options.join("\u0000");
-	let samePool = component.every(feature => feature.options.join("\u0000") === firstOptions);
-	if (samePool) {
-		let totalCount = component.reduce((sum, feature) => sum + feature.count, 0);
-		let title = mathCategoryTitle(component[0]);
-		let combinedFeature = { ...component[0], count: totalCount };
-		let label = title === "Tool Math"
-			? proficiencyFeatureRequirementLines(combinedFeature).join(", ")
-			: countedRegionLabel(totalCount, sourceRegionLabel((1 << component.length) - 1, component));
-		return renderSingleMathBlock(
-			title,
-			singleFeatureMathMeta(component[0]) || singleComponentMathMeta(component),
-			label,
-			`C(${component[0].options.length}, ${totalCount})`,
-			choose(component[0].options.length, totalCount)
-		);
-	}
-
-	let regionData = generalRegionMathData(component);
-	let title = componentRegionMathTitle(component);
-	return renderRegionMathBlock({
-		...regionData,
-		title,
-		resultLabel: componentRegionResultLabel(title)
-	});
-}
-
-// Summarizes the pool size for one non-overlap math component.
-function singleComponentMathMeta(component) {
-	let label = sourceRegionLabel((1 << component.length) - 1, component);
-	if (!label) return "";
-	let poolSize = component[0]?.options?.length || 0;
-	return `${label}: ${poolSize}`;
-}
-
-// Chooses the math title for an overlap component.
-function componentRegionMathTitle(component) {
-	let type = homogeneousComponentType(component);
-	if (type === "cantrip") return "Cantrip Math";
-	if (type === "level1spell") return "Level 1 Spell Math";
-	if (componentIsProficiency(component) && component.some(feature => feature.options.some(isSkill))) return "Skill Math";
-	if (componentIsProficiency(component)) return "Tool Math";
-	return "Choice Math";
-}
-
-// Chooses the total label for an overlap component.
-function componentRegionResultLabel(title) {
-	if (title === "Skill Math") return "skill/proficiency sets";
-	if (title === "Cantrip Math") return "cantrip sets";
-	if (title === "Level 1 Spell Math") return "level 1 spell sets";
-	if (title === "Tool Math") return "tool sets";
-	return "choice sets";
-}
-
-// Returns specialized requirement data for skill, tool, or spell components.
-function componentRequirementData(component, fixedSkillCount = 0) {
-	for (let kind of TAGGED_REQUIREMENT_ORDER) {
-		let data = taggedRequirementData(component, kind);
-		if (data) return data;
-	}
-	return null;
-}
-
-// Renders specialized requirement math for skill, tool, or spell components.
-function componentRequirementMathHTML(component, fixedSkillCount = 0) {
-	return renderRegionMathBlock(componentRequirementData(component, fixedSkillCount));
-}
-
-// Chooses the title for a single-feature math block.
-function mathCategoryTitle(feature) {
-	return featureCategory(feature).mathTitle || featureMathLabel(feature);
-}
-
-// Classifies a feature for overview grouping and math titles.
-function featureCategory(feature) {
-	let label = feature.label.toLowerCase();
-	let options = feature.options || [];
-	if (label.includes("cantrip")) return { overviewGroup: "cantrips", mathTitle: "Cantrip Math" };
-	if (label.includes("level 1")) return { overviewGroup: "level 1 spells", mathTitle: "Level 1 Spell Math" };
-	if (
-		label.includes("instrument") ||
-		label.includes("gamingset") ||
-		label.includes("artisan") ||
-		label.includes("tool") ||
-		sharedProficiencyTag(options, ["instrument", "artisanTool", "gamingSet", "tool"])
-	) return { overviewGroup: "tools", mathTitle: "Tool Math" };
-	if (label.includes("skill")) return { overviewGroup: "skills", mathTitle: "Skill Math" };
-	return { overviewGroup: "other", mathTitle: "" };
-}
-
-// Builds pool metadata for a single-feature math block.
-function singleFeatureMathMeta(feature) {
-	let options = feature.options || [];
-	let sharedTag = sharedProficiencyTag(options, ["instrument", "artisanTool", "gamingSet", "tool"]);
-	if (sharedTag) return `${PROFICIENCY_POOL_LABELS[sharedTag]}: ${options.length}`;
-	return "";
-}
-
-// Renders combined math across compatible independent components.
-function groupedComponentsMathHTML(components, fixedSkillCount, kind) {
-	let displayComponents = components.filter(component => countDistinctChoiceSets(component) !== 1n);
-	if (!displayComponents.length) return "";
-	if (displayComponents.length === 1) {
-		let specialized = componentRequirementMathHTML(displayComponents[0], fixedSkillCount);
-		if (specialized) return specialized;
-	}
-
-	let sections = displayComponents.map(component => componentMathParts(component, fixedSkillCount, kind));
-	let total = sections.reduce((product, section) => product * section.total, 1n);
-	let combinedSimpleTerm = combinedSimpleSectionsTerm(sections, total, kind !== "skill");
-	let terms = combinedSimpleTerm ? [combinedSimpleTerm] : [{ label: "", formula: "", value: 1n }];
-	let termHtml = combinedSimpleTerm ? null : sections.flatMap(section => section.terms).join("");
-	let termCount = combinedSimpleTerm ? 1 : sections.reduce((sum, section) => sum + section.terms.length, 0);
-	let showSummary = termCount > 1;
-	let meta = componentSectionsMeta(sections);
-	let display = TAGGED_REQUIREMENT_DISPLAY[kind] || { title: "Choice Math", resultLabel: "choice sets" };
-
-	return renderRegionMathBlock({
-		title: display.title,
-		meta,
-		terms,
-		total,
-		resultLabel: display.resultLabel,
-		alwaysShowTotal: showSummary,
-		termHtml
-	});
-}
-
-// Combines independent one-factor skill sections into a single rendered term.
-function combinedSimpleSectionsTerm(sections, total) {
-	if (sections.length <= 1 || !sections.every(section => section.simple)) return null;
-	return {
-		label: sections
-			.map(section => countedRegionLabel(section.simple.count, section.simple.label))
-			.join(", "),
-		formula: combinationFormula(sections.map(section => ({
-			poolSize: section.simple.poolSize,
-			count: section.simple.count
-		}))),
-		value: total
-	};
-}
-
-// Builds one component's reusable math terms and factor.
-function componentMathParts(component, fixedSkillCount, kind) {
-	let data = taggedRequirementData(component, kind);
-	if (data) {
-		let terms = data.terms.map(renderMathTerm);
-		if (
-			kind === "skill" &&
-			data.otherPool.length === 0 &&
-			data.terms.length === 1
-		) {
-			let label = regionLabel([data.className]);
-			terms = [renderMathTerm({
-				label: countedRegionLabel(data.remainingPicks, label),
-				formula: `C(${data.classPool.length}, ${data.remainingPicks})`,
-				value: data.total
-			})];
-			return {
-				terms,
-				total: data.total,
-				meta: `${label}: ${data.classPool.length}`,
-				simple: {
-					label,
-					poolSize: data.classPool.length,
-					count: data.remainingPicks
-				}
-			};
-		}
-		return {
-			terms,
-			total: data.total,
-			meta: data.meta,
-			title: data.title,
-			resultLabel: data.resultLabel
-		};
-	}
-
-	if (component.length === 1) {
-		let feature = component[0];
-		let total = choose(feature.options.length, feature.count);
-		let label = simpleSkillComponentLabel(component);
-		return {
-			total,
-			meta: `${label}: ${feature.options.length}`,
-			simple: {
-				label,
-				poolSize: feature.options.length,
-				count: feature.count
-			},
-			terms: [renderMathTerm({
-				label: countedRegionLabel(feature.count, label),
-				formula: `C(${feature.options.length}, ${feature.count})`,
-				value: total
-			})]
-		};
-	}
-
-	let firstOptions = component[0].options.join("\u0000");
-	let samePool = component.every(feature => feature.options.join("\u0000") === firstOptions);
-	if (samePool) {
-		let totalCount = component.reduce((sum, feature) => sum + feature.count, 0);
-		let total = choose(component[0].options.length, totalCount);
-		let label = simpleSkillComponentLabel(component);
-		return {
-			total,
-			meta: `${label}: ${component[0].options.length}`,
-			terms: [renderMathTerm({
-				label: countedRegionLabel(totalCount, label),
-				formula: `C(${component[0].options.length}, ${totalCount})`,
-				value: total
-			})]
-		};
-	}
-
-	let regionData = componentRegionMathData(component, kind);
-	return {
-		total: regionData.total,
-		meta: regionData.meta,
-		formula: regionData.terms.map(term => format(term.value)).join(" + "),
-		terms: regionData.terms.map(renderMathTerm)
-	};
-}
-
-// Builds the combined math pool summary.
-function componentSectionsMeta(sections) {
-	return sections
-		.map(section => section.meta)
-		.filter(Boolean)
-		.join("; ");
-}
-
-// Labels a simple skill component through the same region-label path as overlap math.
-function simpleSkillComponentLabel(component) {
-	let mask = (1 << component.length) - 1;
-	return sourceRegionLabel(mask, component);
-}
-
-// Enumerates count allocations across mutually exclusive overlap regions.
-function overlapRegionTerms(regions, totalPickCount, isValidPicked) {
-	let picked = new Map();
-	let terms = [];
-	let total = 0n;
-
-	function regionKey(region) {
-		return region.id ?? region.mask ?? region.key;
-	}
-
-	function visit(index, remaining, ways) {
-		if (index === regions.length) {
-			if (remaining !== 0 || !isValidPicked(picked, regions)) return;
-			let formulaParts = [];
-			let labelParts = [];
-			for (let region of regions) {
-				let count = picked.get(regionKey(region)) || 0;
-				if (!count) continue;
-				formulaParts.push({ poolSize: region.options.length, count });
-				labelParts.push(countedRegionLabel(count, region.label));
-			}
-			terms.push({
-				label: labelParts.join(", "),
-				formula: combinationFormula(formulaParts),
-				value: ways
-			});
-			total += ways;
-			return;
-		}
-
-		let region = regions[index];
-		let key = regionKey(region);
-		let max = Math.min(region.options.length, remaining);
-		for (let count = 0; count <= max; count++) {
-			picked.set(key, count);
-			visit(index + 1, remaining - count, ways * choose(region.options.length, count));
-		}
-		picked.delete(key);
-	}
-
-	visit(0, totalPickCount, 1n);
-	return {
-		total,
-		terms: terms.filter(term => term.value > 0n)
-	};
-}
-
-// Maps each option in a component to the features whose pools include it.
-function componentOptionMasks(component) {
-	let optionMasks = new Map();
-	component.forEach((feature, featureIndex) => {
-		for (let option of feature.options || []) {
-			optionMasks.set(option, (optionMasks.get(option) || 0) | (1 << featureIndex));
-		}
-	});
-	return optionMasks;
-}
-
-// Groups component options into mutually exclusive overlap regions.
-function componentOverlapRegions(component, labelForMask = null) {
-	let optionMasks = componentOptionMasks(component);
-	return groupOptionsByRegion(
-		[...optionMasks.keys()],
-		option => optionMasks.get(option),
-		(mask, options) => ({
-			mask: Number(mask),
-			id: Number(mask),
-			options: options.sort(),
-			label: labelForMask ? labelForMask(Number(mask), component) : ""
-		}))
-		.sort((left, right) =>
-			labelForMask ? compareMathLabels(left.label, right.label) : left.mask - right.mask
-		);
-}
-
-// Groups options by any computed overlap-region key.
-function groupOptionsByRegion(universe, keyForOption, buildRegion) {
-	let regionsByKey = new Map();
-	for (let option of universe) {
-		let key = keyForOption(option);
-		if (key === null || key === undefined || key === "") continue;
-		key = String(key);
-		if (!regionsByKey.has(key)) regionsByKey.set(key, []);
-		regionsByKey.get(key).push(option);
-	}
-	return [...regionsByKey.entries()].map(([key, options]) => buildRegion(key, options));
-}
-
-// Groups a universe into overlap regions based on tagged requirements.
-function taggedOverlapRegions(universe, requirements, optionMatchesRequirement, labelForKey) {
-	return groupOptionsByRegion(
-		universe,
-		option => {
-			let labels = requirements
-				.filter(requirement => optionMatchesRequirement(option, requirement))
-				.map(requirement => requirement.listName || requirement.label || requirement.id)
-				.sort();
-			return labels.join("|");
-		},
-		(key, options) => {
-			let labels = key.split("|");
-			return {
-				key,
-				id: key,
-				labels,
-				label: labelForKey(key, labels),
-				options: options.sort()
-			};
-		}
-	).sort((left, right) => compareMathLabels(left.label, right.label));
-}
-
-// Checks whether picked overlap regions satisfy each tagged requirement.
-function taggedRegionPicksSatisfy(picked, regions, requirements) {
-	return requirements.every(requirement => {
-		let requiredLabel = requirement.listName || requirement.label || requirement.id;
-		let count = regions.reduce((sum, region) => {
-			if (!region.labels.includes(requiredLabel)) return sum;
-			return sum + (picked.get(region.key) || 0);
+	let fixedSkills = merged.fixed.filter(name => attributeHasTag(ATTRIBUTES.find(attribute => attribute.name === name), "skill")).length;
+	let chosenSkills = Object.values(requirements).reduce((sum, group) => {
+		return sum + (group.choices || []).reduce((choiceSum, choice) => {
+			if (!choice.all?.includes("skill") || choice.not?.includes("skill")) return choiceSum;
+			return choiceSum + choice.count;
 		}, 0);
-		return count >= requirement.count;
-	});
-}
+	}, 0);
+	let totalSkills = fixedSkills + chosenSkills;
 
-// Builds overlap-region combinatorics terms for a component.
-function regionMathData(component, labelForMask, metaForRegions) {
-	let totalPickCount = component.reduce((sum, feature) => sum + feature.count, 0);
-	let regions = componentOverlapRegions(component, labelForMask);
-
-	let result = overlapRegionTerms(
-		regions,
-		totalPickCount,
-		picked => regionPicksCanAssign(picked, regions, component)
-	);
-	return {
-		total: result.total,
-		terms: result.terms,
-		meta: metaForRegions(regions, component)
+	merged.expertise = {
+		count: expertiseCount,
+		totalSkills,
+		term: `C(${totalSkills}, ${expertiseCount})`,
+		value: choose(totalSkills, expertiseCount)
 	};
 }
 
-// Builds overlap-region data for one component.
-function componentRegionMathData(component, kind = "") {
-	return regionMathData(
-		component,
-		sourceRegionLabel,
-		(regions, currentComponent) => regionSummary(regions, currentComponent, sourceRegionLabel)
-	);
-}
-
-// Checks whether region picks can satisfy feature counts.
-function regionPicksCanAssign(picked, regions, component) {
-	function canAssign(regionIndex, remaining) {
-		if (regionIndex === regions.length) return remaining.every(count => count === 0);
-
-		let region = regions[regionIndex];
-		let chosen = picked.get(region.mask) || 0;
-		let featureIndexes = component
-			.map((_, index) => index)
-			.filter(index => region.mask & (1 << index));
-
-		function distribute(featureOffset, left, nextRemaining) {
-			if (featureOffset === featureIndexes.length) {
-				return left === 0 && canAssign(regionIndex + 1, nextRemaining);
-			}
-
-			let featureIndex = featureIndexes[featureOffset];
-			let maxUse = Math.min(left, nextRemaining[featureIndex]);
-			for (let use = 0; use <= maxUse; use++) {
-				let after = [...nextRemaining];
-				after[featureIndex] -= use;
-				if (distribute(featureOffset + 1, left - use, after)) return true;
-			}
-			return false;
-		}
-
-		return distribute(0, chosen, [...remaining]);
-	}
-
-	return canAssign(0, component.map(feature => feature.count));
-}
-
-// Labels one source/list overlap region.
-function sourceRegionLabel(mask, component) {
-	return regionLabel(
-		sourceNamesForMask(mask, component),
-		{ fallback: genericSkillRegionLabel(component) }
-	);
-}
-
-// Builds overlap-region data for general components.
-function generalRegionMathData(component) {
-	return regionMathData(
-		component,
-		generalRegionLabel,
-		(regions, currentComponent) => regionSummary(regions, currentComponent, generalRegionSummaryLabel)
-	);
-}
-
-// Summarizes overlap-region pool sizes with a label callback.
-function regionSummary(regions, component, labelForMask) {
-	return regions
-		.slice()
-		.sort((left, right) => compareMathLabels(
-			labelForMask(left.mask, component),
-			labelForMask(right.mask, component)
-		))
-		.map(region => `${labelForMask(region.mask, component)}: ${region.options.length}`)
-		.join(", ");
-}
-
-// Extracts source/list names represented by a bitmask.
-function sourceNamesForMask(mask, component) {
-	return component
-		.map((feature, index) => (mask & (1 << index) && !featureIsAnySkillChoice(feature) ? featureSourceName(feature) : null))
-		.filter(Boolean);
-}
-
-// Labels one general-region term.
-function generalRegionLabel(mask, component) {
-	let descriptors = generalRegionDescriptors(mask, component);
-	let constrainedCount = component.filter(feature => !featureRegionDescriptor(feature).general).length;
-	if (descriptors.length === 1 && descriptors[0].key === "general") {
-		return constrainedCount ? "other proficiencies" : descriptors[0].label;
-	}
-	if (descriptors.length === 1) return descriptors[0].label;
-	if (descriptors.every(descriptor => descriptor.kind === "skill")) {
-		let names = descriptors
-			.map(descriptor => descriptor.summary)
-			.filter(name => name !== "skills");
-		return regionLabel(names, { fallback: "skills", suffix: " skills" });
-	}
-	if (descriptors.every(descriptor => descriptor.kind === "cantrip" || descriptor.kind === "level1spell")) {
-		return regionLabel(descriptors.map(descriptor => descriptor.summary));
-	}
-	return descriptors.map(descriptor => descriptor.label).join(" / ");
-}
-
-// Adds a count and pluralization to a region label.
-function countedRegionLabel(count, label) {
-	let countedLabel = label;
-	if (count === 1) {
-		countedLabel = pluralizeChoiceLabel(countedLabel, count)
-			.replace(/\bproficiencies\b/g, "proficiency");
-	}
-	return `${count} ${countedLabel}`;
-}
-
-// Labels one general-region pool summary.
-function generalRegionSummaryLabel(mask, component) {
-	let descriptors = generalRegionDescriptors(mask, component);
-	if (descriptors.length === 1 && descriptors[0].key === "general") return "other proficiencies";
-	if (descriptors.every(descriptor => descriptor.kind === "skill")) {
-		let constrainedNames = constrainedSkillRegionNames(component);
-		let names = descriptors
-			.map(descriptor => descriptor.summary)
-			.filter(name => name !== "skills");
-		if (!names.length && constrainedNames.length) {
-			return "other skills";
-		}
-		return regionLabel(names, { fallback: "skills", suffix: " skills" });
-	}
-	if (descriptors.every(descriptor => descriptor.kind === "cantrip" || descriptor.kind === "level1spell")) {
-		return regionLabel(descriptors.map(descriptor => descriptor.summary));
-	}
-	let constrainedCount = component.filter(feature => !featureRegionDescriptor(feature).general).length;
-	let names = descriptors.map(descriptor => descriptor.summary);
-	if (names.length === 1) return names[0];
-	return names.join("/");
-}
-
-// Builds descriptors for one general overlap region.
-function generalRegionDescriptors(mask, component) {
-	let descriptors = component
-		.map((feature, index) => (mask & (1 << index) ? featureRegionDescriptor(feature) : null))
-		.filter(Boolean)
-		.filter(descriptor => !descriptor.general);
-	descriptors = [...new Map(descriptors.map(descriptor => [descriptor.key, descriptor])).values()];
-	return descriptors.length ? descriptors : [{
-		key: "general",
-		label: "proficiencies",
-		summary: "general",
-		kind: "general",
-		general: true
-	}];
-}
-
-// Builds the descriptor for a feature region.
-function featureRegionDescriptor(feature) {
-	let sourceName = featureSourceName(feature);
-	let label = feature.label.toLowerCase();
-	let options = feature.options || [];
-	let allSkills = options.length > 0 && options.every(isSkill);
-	if (label.includes("skilled") || (!sourceName && label.includes("proficien"))) {
-		return {
-			key: "general",
-			label: "proficiencies",
-			summary: "general",
-			kind: "general",
-			general: true
-		};
-	}
-	if (sourceName && allSkills) {
-		if (featureIsAnySkillChoice(feature)) {
-			return {
-				key: "general-skills",
-				label: "skills",
-				summary: "skills",
-				kind: "skill"
-			};
-		}
-		return {
-			key: `skill:${sourceName}`,
-			label: regionLabel([sourceName]),
-			summary: sourceName,
-			kind: "skill"
-		};
-	}
-	let spellType = spellChoiceType(options);
-	if (spellType) {
-		let name = sourceName || titleCase(feature.label);
-		return {
-			key: `${spellType}:${name}`,
-			label: regionLabel([name]),
-			summary: name,
-			kind: spellType
-		};
-	}
-	let name = sourceName || (label.includes("crafter") ? "Crafter" : label.includes("musician") ? "Musician" : titleCase(feature.label));
-	let sharedTag = sharedProficiencyTag(options, ["instrument", "artisanTool", "gamingSet", "tool"]);
-	let kind = sharedTag
-		? PROFICIENCY_POOL_LABELS[sharedTag]
-		: "proficiencies";
-	if (featureIsFullToolPool(feature, kind)) name = kind;
-	let nameMatchesKind = name.toLowerCase() === kind;
-	let summary = kind === "proficiencies"
-		? name
-		: nameMatchesKind
-			? kind
-			: `${name} ${kind}`;
-	let displayLabel = nameMatchesKind
-		? kind
-		: `${name} ${kind}`;
-	return {
-		key: `${kind}:${name}`,
-		label: displayLabel,
-		summary,
-		kind
-	};
-}
-
-// Checks whether a feature spans a complete tool pool.
-function featureIsFullToolPool(feature, kind) {
-	let tag = Object.entries(PROFICIENCY_POOL_LABELS)
-		.find(([, label]) => label === kind)?.[0];
-	if (!tag) return false;
-	let fullPoolSize = getAttributes({ all: [tag] }).length;
-	return (feature.options || []).length === fullPoolSize &&
-		sharedProficiencyTag(feature.options || [], [tag]);
-}
-
-// SECTION: Specialized Skill Tool And Spell Math
-// Builds tagged overlap data for skill or spell requirements.
-function taggedRequirementData(component, kind) {
-	let config = taggedRequirementConfig(component, kind);
-	return config ? buildTaggedRequirementData(config) : null;
-}
-
-// Builds the config for any tagged overlap requirement.
-function taggedRequirementConfig(component, kind) {
-	let universe = [...new Set(component.flatMap(feature => feature.options))].sort();
-	let totalPickCount = component.reduce((sum, feature) => sum + feature.count, 0);
-	let setup = taggedRequirementSetup(component, kind, universe, totalPickCount);
-	if (!setup) return null;
-	let display = TAGGED_REQUIREMENT_DISPLAY[setup.displayKind || kind];
-	if (!display) return null;
-	return {
-		universe: setup.universe || universe,
-		requirements: setup.requirements,
-		totalPickCount: setup.totalPickCount ?? totalPickCount,
-		optionMatchesRequirement: setup.optionMatchesRequirement || ((option, requirement) => hasTag(option, requirement.tag)),
-		regionLabel: setup.regionLabel || ((key, labels) => regionLabel(labels)),
-		title: display.title,
-		resultLabel: display.resultLabel,
-		meta: setup.meta,
-		extra: {
-			...(setup.extra || {}),
-			...(display.typeLabelPlural ? { typeLabelPlural: display.typeLabelPlural } : {})
-		}
-	};
-}
-
-// Adapts skill, tool, cantrip, and spell choices into one tagged math shape.
-function taggedRequirementSetup(component, kind, universe, totalPickCount) {
-	if (kind === "skill") return taggedSkillSetup(component, universe, totalPickCount);
-	if (kind === "tool") return taggedToolSetup(component, universe);
-	if (kind === "spell") return taggedSpellSetup(component, universe, totalPickCount);
-	return null;
-}
-
-// Builds tagged math requirements for class skills plus generic skill choices.
-function taggedSkillSetup(component, universe, totalPickCount) {
-	if (!component.every(feature => feature.options.every(isSkill))) return null;
-	let classFeature = component.find(feature => feature.source?.startsWith("Class: "));
-	if (!classFeature) return null;
-	if (component.some(feature =>
-		!feature.source?.startsWith("Class: ") &&
-		feature.options.length !== feature.count &&
-		specificSkillTags(feature).length
-	)) return null;
-
-	let className = classFeature.source.replace("Class: ", "");
-	let classTag = classTagFor(className);
-	if (!classFeature.options.every(name => hasTag(name, classTag))) return null;
-
-	let mandatoryNames = new Set();
-	for (let feature of component) {
-		if (feature.source?.startsWith("Class: ")) continue;
-		if (feature.options.length === feature.count) {
-			for (let option of feature.options) mandatoryNames.add(option);
-		}
-	}
-
-	let remainingPool = universe.filter(name => !mandatoryNames.has(name));
-	return {
-		displayKind: "skill",
-		universe: remainingPool,
-		requirements: [
-			{ id: "class", label: regionLabel([className]), tag: classTag, count: classFeature.count },
-			{ id: "other", label: "other skills", count: 0 }
-		],
-		totalPickCount: totalPickCount - mandatoryNames.size,
-		optionMatchesRequirement: (option, requirement) =>
-			requirement.id === "class" ? hasTag(option, requirement.tag) : !hasTag(option, classTag),
-		regionLabel: key => key,
-		extra: {
-			className,
-			mandatoryNames,
-			remainingPicks: totalPickCount - mandatoryNames.size,
-			atLeastClass: classFeature.count,
-			classPool: remainingPool.filter(name => hasTag(name, classTag)),
-			otherPool: remainingPool.filter(name => !hasTag(name, classTag))
-		}
-	};
-}
-
-// Builds tagged math requirements for artisan tools, instruments, and mixed tool choices.
-function taggedToolSetup(component, universe) {
-	if (!universe.length || !universe.every(name => hasTag(name, "artisanTool") || hasTag(name, "instrument"))) return null;
-	let counts = { artisan: 0, instrument: 0, mixed: 0 };
-	for (let feature of component) {
-		let artisan = feature.options.some(name => hasTag(name, "artisanTool"));
-		let instrument = feature.options.some(name => hasTag(name, "instrument"));
-		let allArtisan = feature.options.every(name => hasTag(name, "artisanTool"));
-		let allInstrument = feature.options.every(name => hasTag(name, "instrument"));
-		let allMixedTool = feature.options.every(name => hasTag(name, "artisanTool") || hasTag(name, "instrument"));
-		if (allArtisan) counts.artisan += feature.count;
-		else if (allInstrument) counts.instrument += feature.count;
-		else if (allMixedTool && artisan && instrument) counts.mixed += feature.count;
-		else return null;
-	}
-	if (!counts.artisan && !counts.instrument && !counts.mixed) return null;
-
-	return {
-		displayKind: "tool",
-		requirements: [
-			{ id: "artisan", label: "artisan tools", tag: "artisanTool", count: counts.artisan },
-			{ id: "instrument", label: "instruments", tag: "instrument", count: counts.instrument }
-		].filter(requirement => requirement.count || counts.mixed),
-		totalPickCount: counts.artisan + counts.instrument + counts.mixed,
-		regionLabel: key => key,
-		extra: {
-			artisanCount: counts.artisan,
-			instrumentCount: counts.instrument,
-			mixedCount: counts.mixed,
-			artisanPool: universe.filter(name => hasTag(name, "artisanTool")),
-			instrumentPool: universe.filter(name => hasTag(name, "instrument"))
-		}
-	};
-}
-
-// Builds tagged math requirements for one cantrip or level-1-spell universe.
-function taggedSpellSetup(component, universe, totalPickCount) {
-	let type = spellChoiceType(universe);
-	if (type !== "cantrip" && type !== "level1spell") return null;
-	let requirements = component.map(feature => {
-		let tag = inferSpellListTag(feature, type);
-		return tag ? { feature, tag, listName: titleCase(tag), count: feature.count } : null;
-	});
-	if (requirements.some(requirement => !requirement)) return null;
-
-	return {
-		displayKind: type,
-		requirements,
-		totalPickCount,
-		extra: { type }
-	};
-}
-
-// Builds overlap-region math data from tagged requirements.
-function buildTaggedRequirementData({
-	universe,
-	requirements,
-	totalPickCount,
-	optionMatchesRequirement,
-	regionLabel,
-	title,
-	meta,
-	resultLabel,
-	extra = {}
-}) {
-	let regions = taggedOverlapRegions(
-		universe,
-		requirements,
-		optionMatchesRequirement,
-		regionLabel
-	);
-	let result = overlapRegionTerms(
-		regions,
-		totalPickCount,
-		picked => taggedRegionPicksSatisfy(picked, regions, requirements)
-	);
-	let data = {
-		...extra,
-		requirements,
-		regions,
-		terms: result.terms,
-		total: result.total,
-		title,
-		resultLabel
-	};
-	data.meta = taggedRequirementMeta(data, meta);
-	return data;
-}
-
-// Summarizes tagged-region pool sizes.
-function taggedRequirementMeta(data, override = null) {
-	if (override) return typeof override === "function" ? override(data) : override;
-	return data.regions
-		.map(region => `${region.label}: ${region.options.length}`)
-		.join(", ");
-}
-
-// Infers the spell-list tag for a spell choice.
-function inferSpellListTag(feature, type) {
-	let filterTags = Array.isArray(feature.from?.tags)
-		? feature.from.tags
-		: feature.from?.tags?.all || feature.from?.all || [];
-	let explicit = filterTags.find(tag => SPELL_LIST_TAGS.includes(tag));
-	if (explicit) return explicit;
-
-	let featureSet = new Set(feature.options);
-	return SPELL_LIST_TAGS.find(tag => {
-		let list = getAttributes({ type, tags: { all: [tag] } }).map(attribute => attribute.name);
-		return list.length === featureSet.size && list.every(name => featureSet.has(name));
-	});
-}
-
-// SECTION: Source Description Helpers
-// Converts an identifier-like label to title case.
-function titleCase(value) {
-	return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-// Returns the display label for a feature in math output.
-function featureMathLabel(feature) {
-	return feature.source ? `${feature.source} ${feature.label}` : feature.label;
-}
-
-// Returns origin feats granted by a source.
-function featsFromSource(source) {
-	let feats = [];
-	if (source?.originFeat) feats.push(source.originFeat);
-	if (source?.originFeats) feats.push(...source.originFeats);
-	if (source?.magicInitiate && !feats.includes("Magic Initiate")) feats.push("Magic Initiate");
-	return feats;
-}
-
-// Builds the fixed, choice, and modifier display data for a source.
-function describeSource(entry, fixed, forcedItems = [], branchSpellChoices = null, suppressedFixedItems = [], branchSourceChoices = [], branchSourceModifiers = []) {
-	let source = entry.source;
-	let fixedFromChoices = (source.choices || [])
-		.flatMap(choice => choiceFixedNames(choice, fixed));
-	let fixedFromBranchChoices = branchSourceChoices
-		.flatMap(choice => choiceFixedNames(choice, fixed));
-	let suppressed = new Set(suppressedFixedItems);
-	let fixedItems = [...new Set([
-		...(source.fixed || []).filter(name => !suppressed.has(name)),
-		...forcedItems,
-		...fixedFromChoices,
-		...fixedFromBranchChoices
-	])];
-	let fixedFromBranchSet = new Set(fixedFromBranchChoices);
-	let modifiers = source.modifiers
-		? Object.entries(source.modifiers).map(([label, value]) => `${label}: ${format(value)}`)
-		: [];
-	modifiers.push(...branchSourceModifiers.map(({ label, value }) => `${label}: ${format(value)}`));
-	let modifierFactors = modifierEntries(source).concat(
-		branchSourceModifiers.filter(modifier => !modifier.displayOnly)
-	);
-	let modifierWeight = modifierFactors.reduce((total, modifier) => total * modifier.value, 1n);
-	let combinedChoiceSummary = combinedFeatChoiceSummary(source, fixed);
-	let choices = combinedChoiceSummary
-		? [combinedChoiceSummary.text]
-		: (source.choices || [])
-			.filter(choice => !(branchSpellChoices && choiceIsSpellChoice(choice)))
-			.filter(choice => !choiceCoveredByForced(choice, forcedItems))
-			.map(choice => choiceSummary(choice, fixed, forcedItems))
-			.filter(Boolean);
-	choices.push(...grantedFeatChoiceSummaries(source, fixed, combinedChoiceSummary?.absorbedFeats || []));
-	choices.push(...branchSourceChoices
-		.filter(choice => !choiceFixedNames(choice, fixed).some(name => fixedFromBranchSet.has(name)))
-		.map(choice => choiceSummary(choice, fixed))
-		.filter(Boolean));
-	choices.push(...dynamicSpellChoiceSummaries(entry.name, source, fixed, branchSpellChoices));
-	return {
-		kind: entry.kind,
-		name: entry.name,
-		fixedGroups: fixedItemGroups(fixedItems),
-		modifiers,
-		modifierFactors,
-		modifierWeight,
-		choices,
-		feats: []
-	};
-}
-
-// Summarizes choices granted by source feats.
-function grantedFeatChoiceSummaries(source, fixed, absorbedFeats = []) {
-	let summaries = [];
-	for (let feat of featsFromSource(source)) {
-		if (absorbedFeats.includes(feat)) continue;
-		if (feat === "Magic Initiate") {
-			let lists = magicInitiateListsFromSource(source);
-			for (let list of lists) {
-				summaries.push(...magicInitiateChoices(list).map(choice =>
-					choiceSummary(choice, fixed)
-				));
-			}
-			continue;
-		}
-		summaries.push(...specialFeatChoices(feat).map(choice =>
-			choiceSummary(choice, fixed)
-		));
-	}
-	return summaries.filter(Boolean);
-}
-
-// Summarizes spell choices after branch consolidation.
-function dynamicSpellChoiceSummaries(sourceName, source, fixed, branchSpellChoices = null) {
-	let features = branchSpellChoices || [];
-	let grouped = new Map();
-	for (let feature of features) {
-		let options = choicePool(feature, fixed);
-		let type = spellChoiceType(options);
-		if (!type) continue;
-		let tag = inferSpellListTag({ ...feature, options }, type);
-		if (!tag) continue;
-		let key = `${type}|${tag}`;
-		let current = grouped.get(key) || {
-			type,
-			tag,
-			count: 0,
-			pool: options.length
-		};
-		current.count += feature.count;
-		grouped.set(key, current);
-	}
-	return [...grouped.values()].map(group => {
-		let label = group.type === "cantrip" ? "cantrips" : "level 1 spells";
-		return `${titleCase(group.tag)} ${label}: ${countPoolLabel(group.count, group.pool)}`;
-	});
-}
-
-// Groups fixed items by display type.
-function fixedItemGroups(items) {
-	if (!items.length) return [];
-	let groups = [
-		{ label: "Skills", names: [] },
-		{ label: "Cantrips", names: [] },
-		{ label: "Level 1 spells", names: [] },
-		{ label: "Tools", names: [] },
-		{ label: "Other", names: [] }
-	];
-	let byLabel = new Map(groups.map(group => [group.label, group.names]));
-
-	for (let name of items) {
-		let attribute = attributeByName.get(name);
-		if (attributeHasTag(attribute, "cantrip")) byLabel.get("Cantrips").push(name);
-		else if (attributeHasTag(attribute, "level1spell")) byLabel.get("Level 1 spells").push(name);
-		else if (attributeHasTag(attribute, "skill")) byLabel.get("Skills").push(name);
-		else if (attributeHasTag(attribute, "proficiency")) byLabel.get("Tools").push(name);
-		else byLabel.get("Other").push(name);
-	}
-
-	return groups
-		.filter(group => group.names.length);
-}
-
-// Combines background feat choices with default tool choices.
-function combinedFeatChoiceSummary(source, fixed) {
-	let feats = featsFromSource(source);
-	let choices = source.choices || [];
-	let artisanChoice = choices.find(choice => sharedAttributeTag(getAttributes(choiceFilter(choice)), ["artisanTool"]));
-	if (feats.includes("Crafter") && artisanChoice) {
-		let count = artisanChoice.count + 3;
-		let pool = choicePool(artisanChoice, fixed).length;
-		return {
-			text: `artisan tools: ${countPoolLabel(count, pool)}`,
-			absorbedFeats: ["Crafter"]
-		};
-	}
-
-	let instrumentChoice = choices.find(choice => sharedAttributeTag(getAttributes(choiceFilter(choice)), ["instrument"]));
-	if (feats.includes("Musician") && instrumentChoice) {
-		let count = instrumentChoice.count + 3;
-		let pool = choicePool(instrumentChoice, fixed).length;
-		return {
-			text: `instruments: ${countPoolLabel(count, pool)}`,
-			absorbedFeats: ["Musician"]
-		};
-	}
-
-	return null;
-}
-
-// Checks whether a choice is already represented by forced items.
-function choiceCoveredByForced(choice, forcedItems) {
-	if (!forcedItems.length) return false;
-	let forcedSet = new Set(forcedItems);
-	let rawNames = getAttributes(choiceFilter(choice)).map(attribute => attribute.name);
-	return rawNames.length > 0 && rawNames.every(name => forcedSet.has(name));
-}
-
-if (typeof window !== "undefined") {
-	window.calculate = calculate;
+function addWeightedTotal(merged) {
+	let expertiseValue = merged.expertise?.value || 1n;
+	merged.weightedTotal = merged.choiceGroups.reduce((total, group) => total * group.sum, merged.modifiers.totalProduct * expertiseValue);
 }

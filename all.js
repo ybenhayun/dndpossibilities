@@ -48,9 +48,11 @@ function allFastCount(backgroundName, raceName, className) {
 	let key = allComboKey(backgroundName, raceName, className);
 	if (allCountCache.has(key)) return allCountCache.get(key);
 
-	let result = window.calculate(backgroundName, raceName, className);
+	let result = typeof globalThis.calculate === "function"
+		? globalThis.calculate(backgroundName, raceName, className)
+		: globalThis.calculateDraft(backgroundName, raceName, className);
 	let count = {
-		branchRows: BigInt(result.branchRows.length),
+		branchRows: BigInt((result.branchRows || result.branches).length),
 		baseWeight: result.baseWeight
 	};
 	allCountCache.set(key, count);
@@ -110,7 +112,7 @@ function allBreakdownHTML(title, label, names, totals, baseTotal) {
 }
 
 function allTotalHTML(branchRows, baseTotal, elapsedMs, cached = false) {
-	let globalLanguage = GLOBAL_LANGUAGE_WEIGHT;
+	let globalLanguage = typeof GLOBAL_LANGUAGE_WEIGHT !== "undefined" ? GLOBAL_LANGUAGE_WEIGHT : BigInt(globalLanguageWeight());
 	let pointBuy = BigInt(GLOBALS.pointBuyWeight);
 	let rolledAbilityScores = BigInt(GLOBALS.rolledAbilityScoreWeight);
 	let pointBuyTotal = baseTotal * globalLanguage * pointBuy;

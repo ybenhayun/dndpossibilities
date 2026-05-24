@@ -1,67 +1,58 @@
-// main.js
-// Page rendering and controls for the D&D character counter.
-
-// SECTION: Page Rendering And Controls
-// Renders totals and the branch table to the page.
-function render(result, elapsedMs) {
-	let totalBox = document.getElementById("totalBox");
-	let results = document.getElementById("results");
-
-	totalBox.innerHTML = `
-		<strong>Point-buy total:</strong>
-		${format(result.baseWeight)}
-		&times; ${format(result.globalLanguageWeight)}
-		&times; ${format(result.pointBuyWeight)}
-		= ${format(result.finalWeight)}
-		<br>
-		<strong>Rolled-score total:</strong>
-		${format(result.baseWeight)}
-		&times; ${format(result.globalLanguageWeight)}
-		&times; ${format(result.rolledAbilityScoreWeight)}
-		= ${format(result.rolledFinalWeight)}
-		<br>
-		<span>Time: ${elapsedMs.toFixed(2)}ms</span>
-	`;
-
-	results.innerHTML = `
-		${renderMainTable(result)}
-	`;
+function populateSelect(id, collection) {
+	let select = document.getElementById(id);
+	select.innerHTML = "";
+	select.appendChild(new Option("None", "None"));
+	for (let name of Object.keys(collection).sort()) {
+		select.appendChild(new Option(name, name));
+	}
 }
 
-// Renders the main branch result table.
-function renderMainTable(result) {
-	let rows = result.branchRows.map((row, index) => {
-		let formula = modifierFormula(row.choiceFactors, totalModifierWeight(row));
-		let hasFormula = Boolean(formula);
-		let sourceRows = row.sourceRows;
-		let sourceColumns = ["Background", "Race", "Class"].map(kind =>
-			sourceRows.find(source => source.kind === kind)
-		);
-		let rowSpan = hasFormula ? 5 : 4;
-		return `
-			<tr class="sourceNameRow">
-				<td rowspan="${rowSpan}">${index + 1}</td>
-				${renderSourceCells(sourceColumns, (source, kind) => renderSourceName(source, result[`${kind.toLowerCase()}Name`]))}
-				<td class="mathCell" rowspan="4">
-					<div class="branchLabel">${escape(row.label)}</div>
-					${row.mathHtml}
-				</td>
-				<td rowspan="${rowSpan}">${format(row.baseWeight)}</td>
-			</tr>
-			${["Fixed", "Choices", "Mods"].map(section => `
-				<tr class="sourceSectionRow">
-					${renderSourceCells(sourceColumns, source => renderSourceSection(source, section))}
-				</tr>
-			`).join("")}
-			${hasFormula ? `
-				<tr class="modifierRow">
-					<td colspan="3">${sourceModifierMergedSummary(row)}</td>
-					<td class="mathCell choiceFooter">${formula} = ${format(row.baseWeight)}</td>
-				</tr>
-			` : ""}
-		`;
-	}).join("");
+const DRAFT_ABBREVIATIONS = {
+	barbarian: "BAR",
+	bard: "BRD",
+	cleric: "CLE",
+	druid: "DRU",
+	fighter: "FIG",
+	monk: "MON",
+	paladin: "PAL",
+	ranger: "RAN",
+	rogue: "ROG",
+	sorcerer: "SOR",
+	warlock: "WAR",
+	wizard: "WIZ",
+	astralElf: "AEL",
+	bugbear: "BUG",
+	centaur: "CEN",
+	changeling: "CHN",
+	eladrin: "ELD",
+	elf: "ELF",
+	harengon: "HAR",
+	kender: "KND",
+	kobold: "KOB",
+	lizardfolk: "LIZ",
+	satyr: "SAT",
+	seaElf: "SEA",
+	shadarKai: "SHK",
+	shifter: "SHF",
+	tabaxi: "TAB",
+	tortle: "TOR",
+	vedalken: "VED"
+};
+const MATH_ROW_PREVIEW_LIMIT = 3;
+const MATH_ROW_EXPAND_THRESHOLD = 7;
 
+function generateSelected() {
+	ensureDraftTable();
+	renderSourceRows(getBranches());
+}
+
+function ensureDraftTable() {
+	let results = document.getElementById("results");
+	if (document.getElementById("resultsBody")) return;
+	results.innerHTML = draftTableHTML();
+}
+
+function draftTableHTML() {
 	return `
 		<table>
 			<thead>
@@ -74,108 +65,370 @@ function renderMainTable(result) {
 					<th>Weight</th>
 				</tr>
 			</thead>
-			<tbody>${rows || `<tr><td colspan="6">No choice branches.</td></tr>`}</tbody>
-			${renderBranchTotal(result)}
+			<tbody id="resultsBody">
+				<tr class="sourceNameRow">
+					<td rowspan="4"></td>
+					<td class="sourceCell"></td>
+					<td class="sourceCell"></td>
+					<td class="sourceCell"></td>
+					<td class="mathCell" rowspan="4"><span class="cellLabel">Remaining Requirements</span><span class="muted">None</span></td>
+					<td class="mathCell choiceFooter" rowspan="4">1</td>
+				</tr>
+				<tr class="sourceSectionRow">
+					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+				</tr>
+				<tr class="sourceSectionRow">
+					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+				</tr>
+				<tr class="sourceSectionRow">
+					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+				</tr>
+				<tr class="modifierRow">
+					<td class="modifierSpacer"></td>
+					<td colspan="3"><span class="muted">None</span><div>Branch Total: 1 = 1</div></td>
+					<td class="modifierSpacer"></td>
+					<td class="modifierSpacer"></td>
+				</tr>
+			</tbody>
 		</table>
 	`;
 }
 
-// Renders the three source cells for a branch row.
-function renderSourceCells(sourceColumns, renderCell) {
-	return sourceColumns
-		.map(source => `<td>${renderCell(source, source?.kind || "")}</td>`)
-		.join("");
+function renderSourceRows(branches) {
+	let body = document.getElementById("resultsBody");
+	let selected = selectDropdowns();
+	document.getElementById("totalBox").innerHTML = renderGlobalTotals(branches);
+	body.innerHTML = branches.map((branch, index) => renderBranchRows(branch, index, selected)).join("") + renderBranchSumRow(branches);
+	wireMathExpanders();
 }
 
-// Renders the branch-total footer row.
-function renderBranchTotal(result) {
-	if (result.branchRows.length <= 1) return "";
+function renderBranchRows(branch, index, selected) {
+	let sources = [
+		{label: selected.background, data: branch.background},
+		{label: selected.race, data: branch.race},
+		{label: selected.class, data: branch.class}
+	];
+
 	return `
-		<tfoot>
-			<tr>
-				<td colspan="5"><strong>Branch total</strong></td>
-				<td><strong>${format(result.baseWeight)}</strong></td>
+		<tr class="sourceNameRow branchStartRow">
+			<td rowspan="4">${index + 1}</td>
+			${sources.map(source => `<td class="sourceCell">${renderSourceName(source)}</td>`).join("")}
+			<td class="mathCell" rowspan="4">${renderCombinedChoices(branch.merged, index)}</td>
+			<td class="mathCell choiceFooter" rowspan="4">${formatNumber(branch.merged.weightedTotal)}</td>
+		</tr>
+		${["Fixed", "Choices", "Mods"].map(section => `
+			<tr class="sourceSectionRow">
+				${sources.map(source => `<td class="sourceCell">${renderSourceSection(source.data, section)}</td>`).join("")}
 			</tr>
-		</tfoot>
+		`).join("")}
+		<tr class="modifierRow">
+			<td class="modifierSpacer"></td>
+			<td colspan="3">${renderModifierStrip(branch.merged.modifiers)}${renderBranchWeightStrip(branch.merged)}</td>
+			<td class="modifierSpacer"></td>
+			<td class="modifierSpacer"></td>
+		</tr>
 	`;
 }
 
-// Multiplies row modifier weights.
-function totalModifierWeight(row) {
-	return row.staticWeight * row.spellcastingAbility * (row.sourceBranchModifierWeight || 1n);
-}
-
-// Builds the with-modifiers multiplication formula.
-function modifierFormula(choiceFactors, totalModifier) {
-	return [...choiceFactors, totalModifier]
-		.filter(value => BigInt(value) !== 1n)
-		.map(format)
-		.join(" x ");
-}
-
-// Renders the selected source name cell.
-function renderSourceName(row, selectedName) {
-	return `<div class="sourceCell"><strong>${escape(row?.name || selectedName || "None")}</strong></div>`;
-}
-
-// Renders one fixed, choices, or mods source section.
-function renderSourceSection(row, section) {
-	let items = [];
-	if (section === "Fixed") {
-		let fixedGroups = Array.isArray(row?.fixedGroups) ? row.fixedGroups : [];
-		return `
-			<div class="sourceCell">
-				<span class="cellLabel">${section}</span>
-				${fixedGroups.length ? renderFixedGroups(fixedGroups) : `<span class="muted">None</span>`}
-			</div>
-		`;
-	}
-	if (section === "Choices") items = row?.choices?.length ? row.choices : [];
-	if (section === "Mods") items = row?.modifiers?.length ? row.modifiers : [];
+function renderBranchSumRow(branches) {
+	if (branches.length <= 1) return "";
+	let total = branches.reduce((sum, branch) => sum + branch.merged.weightedTotal, 0n);
 	return `
-		<div class="sourceCell">
-			<span class="cellLabel">${section}</span>
-			${items.length ? renderSourceLineList(items) : `<span class="muted">None</span>`}
+		<tr class="branchTotalRow">
+			<td colspan="5">All Branches Total</td>
+			<td class="choiceFooter">${formatNumber(total)}</td>
+		</tr>
+	`;
+}
+
+function renderGlobalTotals(branches) {
+	let branchTotal = branches.reduce((sum, branch) => sum + branch.merged.weightedTotal, 0n);
+	let languageWeight = globalLanguageWeight();
+	let pointBuyWeight = BigInt(GLOBALS.pointBuyWeight);
+	let rolledWeight = BigInt(GLOBALS.rolledAbilityScoreWeight);
+
+	return `
+		<div>Point Buy Total: ${formatNumber(branchTotal)} × ${formatNumber(languageWeight)} × ${formatNumber(pointBuyWeight)} = ${formatNumber(branchTotal * languageWeight * pointBuyWeight)}</div>
+		<div>Rolled Ability Total: ${formatNumber(branchTotal)} × ${formatNumber(languageWeight)} × ${formatNumber(rolledWeight)} = ${formatNumber(branchTotal * languageWeight * rolledWeight)}</div>
+	`;
+}
+
+function globalLanguageWeight() {
+	let standardLanguageCount = ATTRIBUTES.filter(attribute => attributeHasTag(attribute, "standardLanguage")).length;
+	return choose(standardLanguageCount - 1, GLOBALS.languageChoices.count);
+}
+
+function renderSourceName(source) {
+	let label = source.label === "None" ? "None" : source.label;
+	let branch = source.data?.branch ? `<div class="branchLabel">${escapeHtml(source.data.branch)}</div>` : "";
+	return `<strong>${escapeHtml(label)}</strong>${branch}`;
+}
+
+function renderSourceSection(source, section) {
+	let items = [];
+	if (section === "Fixed") items = source.fixed || [];
+	if (section === "Choices") items = (source.choices || []).map(formatChoice);
+	if (section === "Mods") items = Object.entries(source.modifiers || {}).map(([key, value]) => `${key}: ${formatNumber(value)}`);
+
+	return `
+		<span class="cellLabel">${section}</span>
+		${items.length ? renderList(items) : `<span class="muted">None</span>`}
+	`;
+}
+
+function renderList(items) {
+	return `<ul class="sourceLineList">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
+function formatChoice(choice, options = {}) {
+	let total = choice.total ?? ATTRIBUTES.filter(attribute => attributeMatchesChoice(attribute, choice)).length;
+	return `${formatNumber(choice.count)}/${formatNumber(total)} ${choiceLabel(choice, total, options)}`;
+}
+
+function renderModifierStrip(modifiers) {
+	let values = modifiers?.factors || [];
+	if (!values.length) return `<span class="muted">None</span>`;
+	let factors = values.map(formatNumber).join(" × ");
+	return `Modifier Total: ${escapeHtml(factors)} = ${formatNumber(modifiers.totalProduct)}`;
+}
+
+function renderBranchWeightStrip(merged) {
+	let factors = [
+		merged.modifiers?.totalProduct || 1,
+		...(merged.choiceGroups || []).map(group => group.sum),
+		...(merged.expertise ? [merged.expertise.value] : [])
+	];
+	return `<div>Branch Total: ${factors.map(formatNumber).join(" × ")} = ${formatNumber(merged.weightedTotal)}</div>`;
+}
+
+function renderRemainingRequirements(merged) {
+	let groups = merged.choiceGroups || [];
+	let lines = groups.flatMap(group => group.choices.map(choice => formatChoice(choice, {abbreviate: false})));
+
+	return `
+		<div class="mathBlock">
+			<div class="mathTitle">Remaining Requirements</div>
+			<ul class="overviewList">
+				${(lines.length ? lines : ["None"]).map(line => `<li><span>${escapeHtml(line)}</span></li>`).join("")}
+			</ul>
 		</div>
 	`;
 }
 
-// Renders grouped fixed items as nested lists.
-function renderFixedGroups(groups) {
+function renderCombinedChoices(merged, branchIndex) {
+	return `${renderRemainingRequirements(merged)}${renderChoiceMathBlocks(merged, branchIndex)}${renderExpertiseMathBlock(merged)}`;
+}
+
+function renderExpertiseMathBlock(merged) {
+	if (!merged.expertise) return "";
+
 	return `
-		<ul class="fixedGroupList">
-			${groups.map(group => `
+		<div class="mathBlock">
+			<div class="mathTitle">Expertise Math</div>
+			<ul class="mathList">
 				<li>
-					<div class="fixedGroupLabel">${escape(group.label)}:</div>
-					<ul class="fixedItemList">
-						${group.names.map(name => `<li>${escape(name)}</li>`).join("")}
-					</ul>
+					<span class="mathTermLabel"><span>${formatNumber(merged.expertise.count)} expertise choices from ${formatNumber(merged.expertise.totalSkills)} proficient skills</span></span>
+					<code class="stackedFormula"><span>${escapeHtml(merged.expertise.term)}</span></code>
+					<strong class="formulaProduct">${formatNumber(merged.expertise.value)}</strong>
 				</li>
-			`).join("")}
-		</ul>
+			</ul>
+		</div>
 	`;
 }
 
-// Renders a simple source-line list.
-function renderSourceLineList(items) {
+function renderChoiceMathBlocks(merged, branchIndex) {
+	return (merged.choiceGroups || []).map((group, groupIndex) => {
+		let isLong = group.combinations.length > MATH_ROW_EXPAND_THRESHOLD;
+		let visibleCombinations = isLong ? group.combinations.slice(0, MATH_ROW_PREVIEW_LIMIT) : group.combinations;
+		let hiddenCombinations = isLong ? group.combinations.slice(MATH_ROW_PREVIEW_LIMIT) : [];
+		let expandId = `math-extra-${branchIndex}-${groupIndex}`;
+		return `
+		<div class="mathBlock">
+			<div class="mathTitle">${choiceGroupTitle(group)}${choiceGroupMeta(group)}</div>
+			<ul class="mathList">
+				${isLong ? renderExpandControlRow(expandId, hiddenCombinations) : ""}
+				${visibleCombinations.map(combination => renderCombinationRow(combination)).join("")}
+				${isLong ? renderEllipsisRow(expandId) : ""}
+				${isLong ? hiddenCombinations.map(combination => renderCombinationRow(combination, expandId)).join("") : ""}
+				${group.combinations.length > 1 ? `<li class="mathSumRow">
+					<span>Group Sum</span>
+					<span class="formulaSpacer"></span>
+					<strong class="formulaProduct">${formatNumber(group.sum)}</strong>
+				</li>` : ""}
+			</ul>
+		</div>
+	`;
+	}).join("");
+}
+
+function renderExpandControlRow(expandId, combinations) {
 	return `
-		<ul class="sourceLineList">
-			${items.map(item => `<li>${escape(item)}</li>`).join("")}
-		</ul>
+		<li class="mathExpandRow ${escapeHtml(expandId)}-control">
+			<span><button class="mathExpandButton" data-target="${escapeHtml(expandId)}">expand all</button></span>
+			<span class="formulaSpacer"></span>
+			<span class="mathHiddenCount">${formatNumber(combinations.length)} hidden</span>
+		</li>
 	`;
 }
 
-// Renders the merged modifier strip across source columns.
-function sourceModifierMergedSummary(row) {
-	let sourceFactors = (row.sourceRows || []).flatMap(source => source.modifierFactors || []);
-	let factors = sourceFactors.map(modifier => modifier.value);
-	if (row.spellcastingAbility !== 1n) factors.push(row.spellcastingAbility);
-	if (!factors.length) return "";
-	return `Modifiers: ${factors.map(format).join(" x ")} = ${format(totalModifierWeight(row))}`;
+function renderEllipsisRow(expandId) {
+	return `
+		<li class="mathEllipsisRow ${escapeHtml(expandId)}-ellipsis">
+			<span>...</span>
+			<span class="formulaSpacer"></span>
+			<span></span>
+		</li>
+	`;
 }
 
-// Escapes text for safe HTML output.
-function escape(value) {
+function renderCombinationRow(combination, expandId = null) {
+	let parts = sortedParts(combination.parts);
+	return `
+		<li${expandId ? ` class="mathHiddenRow ${escapeHtml(expandId)}"` : ""}>
+			<span class="mathTermLabel">${parts.map(part => `<span>${escapeHtml(partLabel(part))}</span>`).join("")}</span>
+			<code class="stackedFormula">${parts.map(part => `<span>${escapeHtml(formatTerm(part))}</span>`).join("")}</code>
+			<strong class="formulaProduct">${formatNumber(combination.product)}</strong>
+		</li>
+	`;
+}
+
+function wireMathExpanders() {
+	for (let button of document.querySelectorAll(".mathExpandButton")) {
+		button.addEventListener("click", () => {
+			let target = button.dataset.target;
+			let controlRow = button.closest("li");
+			let isCollapsed = button.textContent !== "hide";
+			for (let row of document.querySelectorAll(`.${target}`)) {
+				row.classList.toggle("mathHiddenRow");
+			}
+			button.textContent = isCollapsed ? "hide" : "expand all";
+			controlRow.querySelector(".mathHiddenCount").classList.toggle("mathHiddenRow", isCollapsed);
+			document.querySelector(`.${target}-ellipsis`)?.classList.toggle("mathHiddenRow");
+		});
+	}
+}
+
+function choiceGroupMeta(group) {
+	let meta = sortedTotals(group.totals || []).map(total => `${regionLabel(total.satisfies)}: ${formatNumber(total.count)}`).join(", ");
+	return meta ? ` <span class="mathMeta">${escapeHtml(meta)}</span>` : "";
+}
+
+function choiceGroupTitle(group) {
+	let kinds = new Set(group.choices.map(choiceMathKind));
+	if (kinds.has("cantrip")) return "Cantrip Math";
+	if (kinds.has("level1spell")) return "Level 1 Spell Math";
+	if (kinds.has("proficiency")) return "Proficiency Math";
+	if (kinds.has("skill")) return "Skill Math";
+	if (kinds.size === 1 && kinds.has("instrument")) return "Instrument Math";
+	if ([...kinds].some(kind => ["tool", "instrument", "artisanTool", "gamingSet"].includes(kind))) return "Tool Math";
+	return "Choice Math";
+}
+
+function choiceMathKind(choice) {
+	let tags = [...(choice.all || []), ...(choice.any || [])];
+	if (tags.includes("cantrip")) return "cantrip";
+	if (tags.includes("level1spell")) return "level1spell";
+	if (tags.includes("proficiency")) return "proficiency";
+	if (tags.includes("skill")) return "skill";
+	if (tags.includes("instrument")) return "instrument";
+	if (tags.includes("artisanTool")) return "artisanTool";
+	if (tags.includes("gamingSet")) return "gamingSet";
+	if (tags.includes("tool")) return "tool";
+	return tags.join("|");
+}
+
+function sortedParts(parts) {
+	return [...parts].sort((left, right) => compareRegionLabels(left.satisfies, right.satisfies));
+}
+
+function sortedTotals(totals) {
+	return [...totals].sort((left, right) => compareRegionLabels(left.satisfies, right.satisfies));
+}
+
+function compareRegionLabels(left, right) {
+	return regionPriority(left) - regionPriority(right) || regionLabel(left).localeCompare(regionLabel(right));
+}
+
+function regionPriority(tags) {
+	let type = regionType(tags);
+	let hasDescriptor = tags.some(tag => !["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "cantrip", "level1spell"].includes(tag));
+	if (type === "skill") return hasDescriptor ? 10 : 20;
+	if (["instrument", "artisanTool", "gamingSet", "tool"].includes(type)) return hasDescriptor ? 30 : 40;
+	if (type === "cantrip") return hasDescriptor ? 50 : 60;
+	if (type === "level1spell") return hasDescriptor ? 70 : 80;
+	if (type === "proficiency") return 90;
+	return 100;
+}
+
+function partLabel(part) {
+	return `${formatNumber(part.count)} ${regionLabel(part.satisfies, part.count)}`;
+}
+
+function formatTerm(part) {
+	return `C(${formatNumber(part.from)}, ${formatNumber(part.count)})`;
+}
+
+function choiceLabel(choice, count, {abbreviate = true} = {}) {
+	if (choice.any) {
+		return choice.any.map(tag => pluralize(tagLabel(tag, abbreviate), count)).join(" or ");
+	}
+
+	let tags = choice.all || [];
+	let type = tags.find(tag => ["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "cantrip", "level1spell"].includes(tag));
+	let descriptors = tags.filter(tag => tag !== type).map(tag => tagLabel(tag, abbreviate)).sort();
+	let label = pluralize(tagLabel(type, abbreviate), count);
+
+	if (choice.not?.includes("skill") && type === "proficiency") {
+		label = `non-skill ${label}`;
+	}
+
+	let prefix = descriptors.length ? `${descriptors.join("/")} ` : "";
+	return `${prefix}${label}`;
+}
+
+function tagLabel(tag, abbreviate = true) {
+	let labels = {
+		artisanTool: "artisan tool",
+		gamingSet: "gaming set",
+		level1spell: "level 1 spell"
+	};
+	return labels[tag] || (abbreviate ? DRAFT_ABBREVIATIONS[tag] : null) || tag;
+}
+
+function regionLabel(tags, count = 2) {
+	let type = regionType(tags);
+	let typeTags = ["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "cantrip", "level1spell"];
+	let descriptors = tags.filter(tag => !typeTags.includes(tag)).map(tag => tagLabel(tag)).sort();
+	let typeLabel = regionTypeLabel(type, descriptors.length, count);
+	let prefix = descriptors.length ? `${descriptors.join("/")} ` : "";
+	return `${prefix}${typeLabel}`;
+}
+
+function regionType(tags) {
+	return ["skill", "instrument", "artisanTool", "gamingSet", "tool", "cantrip", "level1spell", "proficiency"]
+		.find(type => tags.includes(type));
+}
+
+function regionTypeLabel(type, hasDescriptors, count) {
+	if (type === "skill") return hasDescriptors ? pluralize("skill", count) : `other ${pluralize("skill", count)}`;
+	if (type === "proficiency") return `other ${pluralize("proficiency", count)}`;
+	return pluralize(tagLabel(type), count);
+}
+
+function pluralize(label, count) {
+	if (count === 1) return label;
+	if (label === "proficiency") return "proficiencies";
+	if (label.endsWith("s")) return label;
+	return `${label}s`;
+}
+
+function escapeHtml(value) {
 	return String(value)
 		.replaceAll("&", "&amp;")
 		.replaceAll("<", "&lt;")
@@ -184,37 +437,17 @@ function escape(value) {
 		.replaceAll("'", "&#039;");
 }
 
-// Fills a select element from a source collection.
-function populateSelect(id, collection) {
-	let select = document.getElementById(id);
-	select.innerHTML = "";
-	select.appendChild(new Option("None", "None"));
-	for (let name of Object.keys(collection).sort()) {
-		select.appendChild(new Option(name, name));
-	}
+function formatNumber(value) {
+	if (typeof value === "number" || typeof value === "bigint") return value.toLocaleString("en-US");
+	return String(value).replace(/\d+/g, number => Number(number).toLocaleString("en-US"));
 }
 
-// Runs the calculator for the current select values.
-function generate() {
-	if (typeof clearRandomOutput === "function") clearRandomOutput();
-	let start = performance.now();
-	let backgroundName = document.getElementById("backgroundSelect").value;
-	let raceName = document.getElementById("raceSelect").value;
-	let className = document.getElementById("classSelect").value;
-	let result = calculate(backgroundName, raceName, className);
-	let elapsedMs = performance.now() - start;
-	render(result, elapsedMs);
-}
-
-// Initializes selects, events, and the first render.
-function init() {
+function initDraftPage() {
 	populateSelect("backgroundSelect", BACKGROUNDS);
 	populateSelect("raceSelect", RACES);
 	populateSelect("classSelect", CLASSES);
-	document.getElementById("generateBtn").addEventListener("click", generate);
-	generate();
+	document.getElementById("generateBtn").addEventListener("click", generateSelected);
+	generateSelected();
 }
 
-if (typeof window !== "undefined") {
-	window.addEventListener("DOMContentLoaded", init);
-}
+window.addEventListener("DOMContentLoaded", initDraftPage);

@@ -899,12 +899,10 @@ const BACKGROUNDS = {
 		fixed: ["Insight", "Religion", "Calligrapher's Supplies"],
 		modifiers: {
 			startingEquipment: 2,
-			abilityScores: 7
+			abilityScores: 7,
+			spellcastingAbility: 3
 		},
-		originFeat: "Magic Initiate",
-		magicInitiate: {
-			lists: ["Cleric"]
-		}
+		originFeat: "Magic Initiate:Cleric"
 	},
 	"Artisan": {
 		fixed: ["Investigation", "Persuasion"],
@@ -976,12 +974,10 @@ const BACKGROUNDS = {
 		fixed: ["Stealth", "Survival", "Cartographer's Tools"],
 		modifiers: {
 			startingEquipment: 2,
-			abilityScores: 7
+			abilityScores: 7,
+			spellcastingAbility: 3
 		},
-		originFeat: "Magic Initiate",
-		magicInitiate: {
-			lists: ["Druid"]
-		}
+		originFeat: "Magic Initiate:Druid"
 	},
 	"Hermit": {
 		fixed: ["Medicine", "Religion", "Herbalism Kit"],
@@ -1017,12 +1013,10 @@ const BACKGROUNDS = {
 		fixed: ["Arcana", "History", "Calligrapher's Supplies"],
 		modifiers: {
 			startingEquipment: 2,
-			abilityScores: 7
+			abilityScores: 7,
+			spellcastingAbility: 3
 		},
-		originFeat: "Magic Initiate",
-		magicInitiate: {
-			lists: ["Wizard"]
-		}
+		originFeat: "Magic Initiate:Wizard"
 	},
 	"Sailor": {
 		fixed: ["Acrobatics", "Perception", "Navigator's Tools"],
@@ -1149,12 +1143,7 @@ const RACES = {
 	"Duergar": {},
 	"Dwarf": {},
 	"Eladrin": {
-		choices: [
-			{
-				count: 1,
-				all: ["skill", "eladrin"]
-			}
-		]
+		fixed: ["Perception"]
 	},
 	"Elf": {
 		modifiers: {
@@ -1255,15 +1244,10 @@ const RACES = {
 	},
 	"Halfling": {},
 	"Harengon": {
+		fixed: ["Perception"],
 		modifiers: {
 			size: 2
-		},
-		choices: [
-			{
-				count: 1,
-				all: ["skill", "harengon"]
-			}
-		]
+		}
 	},
 	"Hexblood": {
 		fixed: ["Disguise Self", "Hex"],
@@ -1295,7 +1279,9 @@ const RACES = {
 				"Crafter",
 				"Healer",
 				"Lucky",
-				"Magic Initiate",
+				"Magic Initiate:Cleric",
+				"Magic Initiate:Druid",
+				"Magic Initiate:Wizard",
 				"Musician",
 				"Savage Attacker",
 				"Skilled",
@@ -1397,11 +1383,8 @@ const RACES = {
 		]
 	},
 	"Satyr": {
+		fixed: ["Performance", "Persuasion"],
 		choices: [
-			{
-				count: 2,
-				all: ["skill", "satyr"]
-			},
 			{
 				count: 1,
 				all: ["instrument"]
@@ -1409,20 +1392,10 @@ const RACES = {
 		]
 	},
 	"SeaElf": {
-		choices: [
-			{
-				count: 1,
-				all: ["skill", "seaElf"]
-			}
-		]
+		fixed: ["Perception"]
 	},
 	"ShadarKai": {
-		choices: [
-			{
-				count: 1,
-				all: ["skill", "shadarKai"]
-			}
-		]
+		fixed: ["Perception"]
 	},
 	"Shifter": {
 		modifiers: {
@@ -1441,15 +1414,10 @@ const RACES = {
 		}
 	},
 	"Tabaxi": {
+		fixed: ["Perception", "Stealth"],
 		modifiers: {
 			size: 2
-		},
-		choices: [
-			{
-				count: 2,
-				all: ["skill", "tabaxi"]
-			}
-		]
+		}
 	},
 	"Thri-kreen": {
 		modifiers: {
@@ -1538,7 +1506,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "barbarian"]
+				all: ["skill", "barbarian"]
 			}
 		]
 	},
@@ -1572,7 +1540,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "cleric"]
+				all: ["skill", "cleric"]
 			},
 			{
 				count: 3,
@@ -1589,9 +1557,12 @@ const CLASSES = {
 			},
 			{
 				name: "Thaumaturge Order",
-				extraCantrips: {
-					count: 1
-				}
+				choices: [
+					{
+						count: 1,
+						all: ["cantrip", "cleric"]
+					}
+				]
 			}
 		]
 	},
@@ -1603,7 +1574,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "druid"]
+				all: ["skill", "druid"]
 			},
 			{
 				count: 2,
@@ -1620,9 +1591,12 @@ const CLASSES = {
 			},
 			{
 				name: "Magician Order",
-				extraCantrips: {
-					count: 1
-				}
+				choices: [
+					{
+						count: 1,
+						all: ["cantrip", "druid"]
+					}
+				]
 			}
 		]
 	},
@@ -1635,7 +1609,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "fighter"]
+				all: ["skill", "fighter"]
 			}
 		]
 	},
@@ -1646,7 +1620,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "monk"]
+				all: ["skill", "monk"]
 			},
 			{
 				count: 1,
@@ -1661,7 +1635,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "paladin"]
+				all: ["skill", "paladin"]
 			},
 			{
 				count: 2,
@@ -1676,7 +1650,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 3,
-				all: ["proficiency", "ranger"]
+				all: ["skill", "ranger"]
 			},
 			{
 				count: 2,
@@ -1692,7 +1666,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 4,
-				all: ["proficiency", "rogue"]
+				all: ["skill", "rogue"]
 			}
 		],
 		expertise: {
@@ -1706,7 +1680,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "sorcerer"]
+				all: ["skill", "sorcerer"]
 			},
 			{
 				count: 4,
@@ -1726,7 +1700,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "warlock"]
+				all: ["skill", "warlock"]
 			},
 			{
 				count: 2,
@@ -1745,7 +1719,7 @@ const CLASSES = {
 		choices: [
 			{
 				count: 2,
-				all: ["proficiency", "wizard"]
+				all: ["skill", "wizard"]
 			},
 			{
 				count: 3,

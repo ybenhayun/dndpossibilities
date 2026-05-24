@@ -177,8 +177,7 @@ for (const { background, race, klass } of htmlSampleCases) {
 		klass,
 		result.branchRows.length,
 		result.baseWeight,
-		sha256(html),
-		""
+		sha256(html)
 	].join("\t"));
 }
 

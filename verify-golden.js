@@ -49,7 +49,7 @@ for (let line of lines) {
 		let base;
 		let expectedHash;
 		let expectedHtml64;
-		if (parts.length >= 10) {
+		if (parts[1] === "full" || parts[1] === "hash") {
 			[, mode, name, background, race, klass, rows, base, expectedHash, expectedHtml64] = parts;
 		} else {
 			[, name, background, race, klass, rows, base, expectedHash, expectedHtml64] = parts;
