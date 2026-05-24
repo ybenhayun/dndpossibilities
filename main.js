@@ -292,7 +292,7 @@ function renderCombinationRow(combination, expandId = null) {
 	return `
 		<li${expandId ? ` class="mathHiddenRow ${escapeHtml(expandId)}"` : ""}>
 			<span class="mathTermLabel">${parts.map(part => `<span>${escapeHtml(partLabel(part))}</span>`).join("")}</span>
-			<code class="stackedFormula">${parts.map(part => `<span>${escapeHtml(formatTerm(part))}</span>`).join("")}</code>
+			<code class="stackedFormula">${parts.map((part, index) => `<span>${escapeHtml(formatTerm(part, index < parts.length - 1))}</span>`).join("")}</code>
 			<strong class="formulaProduct">${formatNumber(combination.product)}</strong>
 		</li>
 	`;
@@ -370,8 +370,8 @@ function partLabel(part) {
 	return `${formatNumber(part.count)} ${regionLabel(part.satisfies, part.count)}`;
 }
 
-function formatTerm(part) {
-	return `C(${formatNumber(part.from)}, ${formatNumber(part.count)})`;
+function formatTerm(part, showMultiplier = false) {
+	return `C(${formatNumber(part.from)}, ${formatNumber(part.count)})${showMultiplier ? " ×" : ""}`;
 }
 
 function choiceLabel(choice, count, {abbreviate = true} = {}) {
