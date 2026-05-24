@@ -103,27 +103,37 @@ function draftTableHTML() {
 function renderSourceRows(branches) {
 	let body = document.getElementById("resultsBody");
 	let selected = selectDropdowns();
+	let collapsible = branches.length > 1;
 	document.getElementById("totalBox").innerHTML = renderGlobalTotals(branches);
-	body.innerHTML = branches.map((branch, index) => renderBranchRows(branch, index, selected)).join("") + renderBranchSumRow(branches);
+	body.innerHTML = branches.map((branch, index) => renderBranchRows(branch, index, selected, collapsible)).join("") + renderBranchSumRow(branches);
 	wireMathExpanders();
+	wireBranchExpanders();
 }
 
-function renderBranchRows(branch, index, selected) {
+function renderBranchRows(branch, index, selected, collapsible = false) {
 	let sources = [
 		{label: selected.background, data: branch.background},
 		{label: selected.race, data: branch.race},
 		{label: selected.class, data: branch.class}
 	];
+	let branchId = `branch-${index}`;
+	let rowSpan = collapsible ? 1 : 4;
 
 	return `
 		<tr class="sourceNameRow branchStartRow">
-			<td rowspan="4">${index + 1}</td>
+			<td rowspan="${rowSpan}" class="branchNumberCell" data-branch-rowspan="${branchId}">
+				<div>${index + 1}</div>
+				${collapsible ? `<button class="branchToggleButton" data-target="${branchId}" aria-expanded="false">▾</button>` : ""}
+			</td>
 			${sources.map(source => `<td class="sourceCell">${renderSourceName(source)}</td>`).join("")}
-			<td class="mathCell" rowspan="4">${renderCombinedChoices(branch.merged, index)}</td>
-			<td class="mathCell choiceFooter" rowspan="4">${formatNumber(branch.merged.weightedTotal)}</td>
+			<td class="mathCell${collapsible ? " branchCollapsedMath" : ""}" rowspan="${rowSpan}" data-branch-rowspan="${branchId}" data-branch-math="${branchId}">
+				${collapsible ? `<span class="muted">Collapsed</span>` : renderCombinedChoices(branch.merged, index)}
+				${collapsible ? `<template>${renderCombinedChoices(branch.merged, index)}</template>` : ""}
+			</td>
+			<td class="mathCell choiceFooter" rowspan="${rowSpan}" data-branch-rowspan="${branchId}">${formatNumber(branch.merged.weightedTotal)}</td>
 		</tr>
 		${["Fixed", "Choices", "Mods"].map(section => `
-			<tr class="sourceSectionRow">
+			<tr class="sourceSectionRow${collapsible ? " branchHiddenRow" : ""}" data-branch-detail="${branchId}">
 				${sources.map(source => `<td class="sourceCell">${renderSourceSection(source.data, section)}</td>`).join("")}
 			</tr>
 		`).join("")}
@@ -310,6 +320,35 @@ function wireMathExpanders() {
 			button.textContent = isCollapsed ? "hide" : "expand all";
 			controlRow.querySelector(".mathHiddenCount").classList.toggle("mathHiddenRow", isCollapsed);
 			document.querySelector(`.${target}-ellipsis`)?.classList.toggle("mathHiddenRow");
+		});
+	}
+}
+
+function wireBranchExpanders() {
+	for (let button of document.querySelectorAll(".branchToggleButton")) {
+		button.addEventListener("click", () => {
+			let target = button.dataset.target;
+			let isExpanded = button.getAttribute("aria-expanded") === "true";
+			let nextExpanded = !isExpanded;
+
+			for (let row of document.querySelectorAll(`[data-branch-detail="${target}"]`)) {
+				row.classList.toggle("branchHiddenRow", !nextExpanded);
+			}
+			for (let cell of document.querySelectorAll(`[data-branch-rowspan="${target}"]`)) {
+				cell.rowSpan = nextExpanded ? 4 : 1;
+			}
+
+			let mathCell = document.querySelector(`[data-branch-math="${target}"]`);
+			let fullMath = mathCell.querySelector("template")?.innerHTML || "";
+			mathCell.classList.toggle("branchCollapsedMath", !nextExpanded);
+			for (let node of [...mathCell.childNodes]) {
+				if (node.nodeName !== "TEMPLATE") node.remove();
+			}
+			mathCell.insertAdjacentHTML("afterbegin", nextExpanded ? fullMath : `<span class="muted">Collapsed</span>`);
+
+			button.textContent = nextExpanded ? "▴" : "▾";
+			button.setAttribute("aria-expanded", String(nextExpanded));
+			wireMathExpanders();
 		});
 	}
 }

@@ -348,6 +348,33 @@ tr:nth-child(even) {
 	padding-top: 0;
 }
 
+.branchHiddenRow {
+	display: none;
+}
+
+.branchCollapsedMath {
+	color: #aaa;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.branchNumberCell {
+	text-align: center;
+	vertical-align: top;
+}
+
+.branchToggleButton {
+	background: transparent;
+	border: 0;
+	color: #ffd08a;
+	cursor: pointer;
+	font-size: 18px;
+	font-weight: bold;
+	line-height: 1;
+	margin: 6px 0 0;
+	padding: 0;
+}
+
 .choiceFooter {
 	color: #ffd08a;
 	font-weight: bold;
