@@ -55,6 +55,7 @@ function ensureDraftTable() {
 function draftTableHTML() {
 	return `
 		<table>
+			${tableColumnGroupHTML()}
 			<thead>
 				<tr>
 					<th>#</th>
@@ -97,6 +98,19 @@ function draftTableHTML() {
 				</tr>
 			</tbody>
 		</table>
+	`;
+}
+
+function tableColumnGroupHTML() {
+	return `
+		<colgroup>
+			<col class="branchNumberColumn">
+			<col class="sourceColumn">
+			<col class="sourceColumn">
+			<col class="sourceColumn">
+			<col class="combinedColumn">
+			<col class="weightColumn">
+		</colgroup>
 	`;
 }
 

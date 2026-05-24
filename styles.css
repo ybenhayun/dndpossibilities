@@ -20,6 +20,23 @@ table {
 	margin-top: 20px;
 	width: 100%;
 	background: #333;
+	table-layout: fixed;
+}
+
+.branchNumberColumn {
+	width: 46px;
+}
+
+.sourceColumn {
+	width: 15%;
+}
+
+.combinedColumn {
+	width: 38%;
+}
+
+.weightColumn {
+	width: 17%;
 }
 
 th,
