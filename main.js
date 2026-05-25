@@ -178,6 +178,7 @@ function renderBranchSumRow(branches) {
 function renderGlobalTotals(branches) {
 	let branchTotal = branches.reduce((sum, branch) => sum + branch.merged.weightedTotal, 0n);
 	let languageWeight = globalLanguageWeight();
+	let standardWeight = BigInt(GLOBALS.standardAbilityScoreWeight);
 	let pointBuyWeight = BigInt(GLOBALS.pointBuyWeight);
 	let rolledWeight = BigInt(GLOBALS.rolledAbilityScoreWeight);
 
@@ -196,6 +197,7 @@ function renderGlobalTotals(branches) {
 				</tr>
 			</thead>
 			<tbody>
+				${renderGlobalTotalRow("Standard", branchTotal, languageWeight, standardWeight)}
 				${renderGlobalTotalRow("Point Buy", branchTotal, languageWeight, pointBuyWeight)}
 				${renderGlobalTotalRow("Rolled Ability", branchTotal, languageWeight, rolledWeight)}
 			</tbody>
@@ -411,14 +413,14 @@ function wireBranchExpanders() {
 }
 
 function choiceGroupMeta(group) {
-	let meta = sortedTotals(group.totals || []).map(total => `${regionLabel(total.satisfies)}: ${formatNumber(total.count)}`).join(", ");
-	return meta ? ` <span class="mathMeta">${escapeHtml(meta)}</span>` : "";
+	let meta = sortedTotals(group.totals || []).map(total => `${formatNumber(total.count)} ${regionLabel(total.satisfies, total.count)}`).join(", ");
+	return meta ? `<div class="mathMeta">${escapeHtml(meta)}</div>` : "";
 }
 
 function choiceGroupTitle(group) {
 	let kinds = new Set(group.choices.map(choiceMathKind));
 	if (kinds.has("cantrip")) return "Cantrip Math";
-	if (kinds.has("level1spell")) return "L1 Spell Math";
+	if (kinds.has("level1spell")) return "Level 1 Spell Math";
 	if (kinds.has("proficiency")) return "Proficiency Math";
 	if (kinds.has("skill")) return "Skill Math";
 	if (kinds.size === 1 && kinds.has("instrument")) return "Instrument Math";
@@ -463,14 +465,14 @@ function regionPriority(tags) {
 }
 
 function partLabel(part) {
-	return `${formatNumber(part.count)} ${regionLabel(part.satisfies, part.count)}`;
+	return `${formatNumber(part.count)} ${regionLabel(part.satisfies, part.count, {abbreviate: true})}`;
 }
 
 function formatTerm(part, showMultiplier = false) {
 	return `C(${formatNumber(part.from)}, ${formatNumber(part.count)})${showMultiplier ? " ×" : ""}`;
 }
 
-function choiceLabel(choice, count, {abbreviate = true} = {}) {
+function choiceLabel(choice, count, {abbreviate = false} = {}) {
 	if (choice.any) {
 		return choice.any.map(tag => pluralize(tagLabel(tag, abbreviate), count)).join(" or ");
 	}
@@ -488,19 +490,19 @@ function choiceLabel(choice, count, {abbreviate = true} = {}) {
 	return `${prefix}${label}`;
 }
 
-function tagLabel(tag, abbreviate = true) {
+function tagLabel(tag, abbreviate = false) {
 	let labels = {
 		artisanTool: "artisan tool",
 		gamingSet: "gaming set",
-		level1spell: "L1 spell"
+		level1spell: "spell"
 	};
 	return labels[tag] || (abbreviate ? DRAFT_ABBREVIATIONS[tag] : null) || tag;
 }
 
-function regionLabel(tags, count = 2) {
+function regionLabel(tags, count = 2, {abbreviate = false} = {}) {
 	let type = regionType(tags);
 	let typeTags = ["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "cantrip", "level1spell"];
-	let descriptors = tags.filter(tag => !typeTags.includes(tag)).map(tag => tagLabel(tag)).sort();
+	let descriptors = tags.filter(tag => !typeTags.includes(tag)).map(tag => tagLabel(tag, abbreviate)).sort();
 	let typeLabel = regionTypeLabel(type, descriptors.length, count);
 	let prefix = descriptors.length ? `${descriptors.join("/")} ` : "";
 	return `${prefix}${typeLabel}`;

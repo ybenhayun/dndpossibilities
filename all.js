@@ -113,6 +113,7 @@ function allBreakdownHTML(title, label, names, totals, baseTotal) {
 
 function allTotalHTML(branchRows, baseTotal, elapsedMs, cached = false) {
 	let globalLanguage = typeof GLOBAL_LANGUAGE_WEIGHT !== "undefined" ? GLOBAL_LANGUAGE_WEIGHT : BigInt(globalLanguageWeight());
+	let standard = BigInt(GLOBALS.standardAbilityScoreWeight);
 	let pointBuy = BigInt(GLOBALS.pointBuyWeight);
 	let rolledAbilityScores = BigInt(GLOBALS.rolledAbilityScoreWeight);
 	return `
@@ -130,11 +131,12 @@ function allTotalHTML(branchRows, baseTotal, elapsedMs, cached = false) {
 				</tr>
 			</thead>
 			<tbody>
+				${allGlobalTotalRow("Standard", baseTotal, globalLanguage, standard)}
 				${allGlobalTotalRow("Point Buy", baseTotal, globalLanguage, pointBuy)}
 				${allGlobalTotalRow("Rolled Ability", baseTotal, globalLanguage, rolledAbilityScores)}
 			</tbody>
 		</table>
-		<div class="allElapsedLine">Time: ${allElapsed(elapsedMs)}${cached ? " (cached)" : ""}</div>
+		${cached ? "" : `<div class="allElapsedLine">Time: ${allElapsed(elapsedMs)}</div>`}
 	`;
 }
 
@@ -219,9 +221,9 @@ async function runAllCombinations() {
 
 	let elapsed = allNow() - start;
 	let breakdownHTML = [
-		allBreakdownHTML("Background Breakdown", "Background", backgroundNames, backgroundTotals, baseTotal),
+		allBreakdownHTML("Class Breakdown", "Class", classNames, classTotals, baseTotal),
 		allBreakdownHTML("Race Breakdown", "Race", raceNames, raceTotals, baseTotal),
-		allBreakdownHTML("Class Breakdown", "Class", classNames, classTotals, baseTotal)
+		allBreakdownHTML("Background Breakdown", "Background", backgroundNames, backgroundTotals, baseTotal)
 	].join("");
 
 	allCachedHTML = breakdownHTML;

@@ -1512,7 +1512,7 @@ const CLASSES = {
 	},
 	"Bard": {
 		modifiers: {
-			startingEquipment: 2
+			startingEquipment: 11
 		},
 		choices: [
 			{
@@ -1535,7 +1535,7 @@ const CLASSES = {
 	},
 	"Cleric": {
 		modifiers: {
-			startingEquipment: 2
+			startingEquipment: 4
 		},
 		choices: [
 			{
@@ -1630,7 +1630,7 @@ const CLASSES = {
 	},
 	"Paladin": {
 		modifiers: {
-			startingEquipment: 2
+			startingEquipment: 4
 		},
 		choices: [
 			{
@@ -1644,6 +1644,7 @@ const CLASSES = {
 		]
 	},
 	"Ranger": {
+		fixed: ["Hunter's Mark"],
 		modifiers: {
 			startingEquipment: 2
 		},
@@ -1739,6 +1740,7 @@ const GLOBALS = {
 		all: ["standardLanguage"],
 		exclude: ["Common"]
 	},
+	standardAbilityScoreWeight: 720,
 	pointBuyWeight: 12282,
 	rolledAbilityScoreWeight: 16777216
 };

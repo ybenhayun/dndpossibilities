@@ -21,7 +21,6 @@ function calculateDraft(backgroundName, raceName, className) {
 
 	return {
 		branches: mergedBranches,
-		branchRows: mergedBranches,
 		baseWeight
 	};
 }
@@ -80,7 +79,7 @@ function createBranches(requirements, attributesCopy) {
 
 						addFixedRequirements(skilledBranch, merged, branchAttributes);
 						for (let group of Object.values(skilledBranch)) {
-							group.choices = collectChoices({group}, branchAttributes);
+							group.choices = collectChoices({group}, branchAttributes, merged);
 						}
 						merged.choiceGroups = choiceGroups(collectChoices(skilledBranch, branchAttributes), branchAttributes);
 						addCombinationMath(merged.choiceGroups);
@@ -113,7 +112,9 @@ function skilledChoiceBranches(requirements) {
 
 	if (!requirements.class.expertise) {
 		let branch = copyBranchRequirements(requirements);
-		branch.background.choices.push({count: totalPicks, all: ["proficiency"]});
+		for (let group of Object.values(branch)) {
+			if (group.skilledCount) group.choices.push({count: group.skilledCount * 3, all: ["proficiency"]});
+		}
 		return [branch];
 	}
 
@@ -181,27 +182,54 @@ function addBranchRequirements(requirements, branch) {
 function addFixedRequirements(requirements, merged, attributesCopy) {
 	for (let group of Object.values(requirements)) {
 		for (let i = (group.fixed || []).length - 1; i >= 0; i--) {
-			let skill = group.fixed[i];
-			let j = attributesCopy.findIndex(attribute => attribute.name === skill);
+			let fixedName = group.fixed[i];
+			let removed = removeAttributes([fixedName], attributesCopy, merged.fixed);
 
-			if (j >= 0) {
-				attributesCopy.splice(j, 1);
-				merged.fixed.push(skill);
-			} else {
-				let duplicate = ATTRIBUTES.find(attribute => attribute.name === skill);
+			if (!removed.length) {
+				let duplicate = ATTRIBUTES.find(attribute => attribute.name === fixedName);
 				group.fixed.splice(i, 1);
-				if (attributeHasTag(duplicate, "skill")) group.choices.push({count: 1, all: ["skill"]});
+				let replacementChoice = duplicateFixedChoice(duplicate, group);
+				group.choices.push(replacementChoice);
 			}
 		}
 	}
 }
 
-function collectChoices(requirements, attributes) {
+function removeAttributes(names, attributes, fixedList) {
+	let removed = [];
+
+	for (let name of names) {
+		let index = attributes.findIndex(attribute => attribute.name === name);
+		if (index >= 0) removed.push(attributes.splice(index, 1)[0]);
+	}
+
+	fixedList.push(...removed.map(attribute => attribute.name));
+	return removed;
+}
+
+function duplicateFixedChoice(attribute, group) {
+	let matchingChoice = (group.choices || []).find(choice =>
+		(choice.all || []).includes(attribute.type) &&
+		(choice.all || []).every(tag => attributeHasTag(attribute, tag))
+	);
+	return {count: 1, all: matchingChoice ? [...matchingChoice.all] : [attribute.type]};
+}
+
+function collectChoices(requirements, attributes, merged = null) {
 	let choices = [];
 
 	for (let group of Object.values(requirements)) {
+		let remainingChoices = [];
 		for (let choice of group.choices || []) {
-			choice.total = attributes.filter(attribute => attributeMatchesChoice(attribute, choice)).length;
+			let pool = attributes.filter(attribute => attributeMatchesChoice(attribute, choice));
+			if (merged && choice.count === pool.length) {
+				let removed = removeAttributes(pool.map(attribute => attribute.name), attributes, merged.fixed);
+				group.fixed.push(...removed.map(attribute => attribute.name));
+				continue;
+			}
+
+			choice.total = pool.length;
+			remainingChoices.push(choice);
 			let existingChoice = choices.find(existingChoice => sameChoice(existingChoice, choice));
 
 			if (existingChoice) {
@@ -210,6 +238,7 @@ function collectChoices(requirements, attributes) {
 				choices.push({...choice});
 			}
 		}
+		if (merged) group.choices = remainingChoices;
 	}
 
 	return choices;
