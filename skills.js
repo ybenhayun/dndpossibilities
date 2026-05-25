@@ -1660,6 +1660,7 @@ const CLASSES = {
 		]
 	},
 	"Rogue": {
+        fixed: ["Thieves' Tools"],
 		modifiers: {
 			startingEquipment: 2,
 			languages: 15

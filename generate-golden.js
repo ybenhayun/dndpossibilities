@@ -64,14 +64,14 @@ function run(context, expression) {
 function calculate(context, background, race, klass) {
 	return run(
 		context,
-		`calculate(${JSON.stringify(background)}, ${JSON.stringify(race)}, ${JSON.stringify(klass)})`
+		`calculateDraft(${JSON.stringify(background)}, ${JSON.stringify(race)}, ${JSON.stringify(klass)})`
 	);
 }
 
 function renderHtml(context, background, race, klass) {
 	return run(
 		context,
-		`renderMainTable(calculate(${JSON.stringify(background)}, ${JSON.stringify(race)}, ${JSON.stringify(klass)}))`
+		`renderGoldenTable(${JSON.stringify(background)}, ${JSON.stringify(race)}, ${JSON.stringify(klass)})`
 	);
 }
 
@@ -89,6 +89,33 @@ function inTenPercentSample(background, race, klass) {
 }
 
 const context = loadContext();
+run(context, `
+	function renderGoldenTable(background, race, klass) {
+		let result = calculateDraft(background, race, klass);
+		let branches = result.branches;
+		let selected = { background, race, class: klass };
+		let collapsible = branches.length > 1;
+		return \`
+			<table>
+				\${tableColumnGroupHTML()}
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Background</th>
+						<th>Race</th>
+						<th>Class</th>
+						<th>Combined Choices</th>
+						<th>Weight</th>
+					</tr>
+				</thead>
+				<tbody>
+					\${branches.map((branch, index) => renderBranchRows(branch, index, selected, collapsible)).join("")}
+					\${renderBranchSumRow(branches)}
+				</tbody>
+			</table>
+		\`;
+	}
+`);
 const backgrounds = ["None", ...sortedNames(context, "BACKGROUNDS")];
 const races = ["None", ...sortedNames(context, "RACES")];
 const classes = ["None", ...sortedNames(context, "CLASSES")];
@@ -125,9 +152,13 @@ for (const file of FILES) {
 	}
 }
 
-lines.push("# Columns: kind\tindex\tnote\tbackground\trace\tclass\tbranch_rows\tbase_weight\tglobal_weight\tfinal_weight");
+lines.push("# Columns: kind\tindex\tnote\tbackground\trace\tclass\tbranch_rows\tbase_weight\tstandard_total\tpoint_buy_total\trolled_total");
 
 let index = 1;
+const languageWeight = run(context, "globalLanguageWeight()");
+const standardWeight = run(context, "BigInt(GLOBALS.standardAbilityScoreWeight)");
+const pointBuyWeight = run(context, "BigInt(GLOBALS.pointBuyWeight)");
+const rolledWeight = run(context, "BigInt(GLOBALS.rolledAbilityScoreWeight)");
 for (const { background, race, klass } of allCases) {
 	const result = calculate(context, background, race, klass);
 	lines.push([
@@ -137,15 +168,16 @@ for (const { background, race, klass } of allCases) {
 		background,
 		race,
 		klass,
-		result.branchRows.length,
+		result.branches.length,
 		result.baseWeight,
-		result.globalWeight,
-		result.finalWeight
+		result.baseWeight * languageWeight * standardWeight,
+		result.baseWeight * languageWeight * pointBuyWeight,
+		result.baseWeight * languageWeight * rolledWeight
 	].join("\t"));
 }
 
 lines.push("");
-lines.push("# HTML Snapshots: renderMainTable(calculate(background, race, class))");
+lines.push("# HTML Snapshots: renderGoldenTable(background, race, class)");
 lines.push("# Columns: HTML_SNAPSHOT\tmode\tname\tbackground\trace\tclass\tbranch_rows\tbase_weight\tsha256\tbase64_html");
 
 for (const [name, background, race, klass] of TRICKY_HTML_CASES) {
@@ -158,7 +190,7 @@ for (const [name, background, race, klass] of TRICKY_HTML_CASES) {
 		background,
 		race,
 		klass,
-		result.branchRows.length,
+		result.branches.length,
 		result.baseWeight,
 		sha256(html),
 		Buffer.from(html, "utf8").toString("base64")
@@ -175,7 +207,7 @@ for (const { background, race, klass } of htmlSampleCases) {
 		background,
 		race,
 		klass,
-		result.branchRows.length,
+		result.branches.length,
 		result.baseWeight,
 		sha256(html)
 	].join("\t"));

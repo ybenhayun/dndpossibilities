@@ -424,7 +424,7 @@ function choiceGroupTitle(group) {
 	if (kinds.has("proficiency")) return "Proficiency Math";
 	if (kinds.has("skill")) return "Skill Math";
 	if (kinds.size === 1 && kinds.has("instrument")) return "Instrument Math";
-	if ([...kinds].some(kind => ["tool", "instrument", "artisanTool", "gamingSet"].includes(kind))) return "Tool Math";
+	if ([...kinds].some(kind => ["tool", "instrument", "artisanTool", "gamingSet", "kit"].includes(kind))) return "Tool Math";
 	return "Choice Math";
 }
 
@@ -437,6 +437,7 @@ function choiceMathKind(choice) {
 	if (tags.includes("instrument")) return "instrument";
 	if (tags.includes("artisanTool")) return "artisanTool";
 	if (tags.includes("gamingSet")) return "gamingSet";
+	if (tags.includes("kit")) return "kit";
 	if (tags.includes("tool")) return "tool";
 	return tags.join("|");
 }
@@ -455,9 +456,9 @@ function compareRegionLabels(left, right) {
 
 function regionPriority(tags) {
 	let type = regionType(tags);
-	let hasDescriptor = tags.some(tag => !["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "cantrip", "level1spell"].includes(tag));
+	let hasDescriptor = tags.some(tag => !["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "kit", "cantrip", "level1spell"].includes(tag));
 	if (type === "skill") return hasDescriptor ? 10 : 20;
-	if (["instrument", "artisanTool", "gamingSet", "tool"].includes(type)) return hasDescriptor ? 30 : 40;
+	if (["instrument", "artisanTool", "gamingSet", "kit", "tool"].includes(type)) return hasDescriptor ? 30 : 40;
 	if (type === "cantrip") return hasDescriptor ? 50 : 60;
 	if (type === "level1spell") return hasDescriptor ? 70 : 80;
 	if (type === "proficiency") return 90;
@@ -478,7 +479,7 @@ function choiceLabel(choice, count, {abbreviate = false} = {}) {
 	}
 
 	let tags = choice.all || [];
-	let type = tags.find(tag => ["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "cantrip", "level1spell"].includes(tag));
+	let type = tags.find(tag => ["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "kit", "cantrip", "level1spell"].includes(tag));
 	let descriptors = tags.filter(tag => tag !== type).map(tag => tagLabel(tag, abbreviate)).sort();
 	let label = pluralize(tagLabel(type, abbreviate), count);
 
@@ -494,6 +495,7 @@ function tagLabel(tag, abbreviate = false) {
 	let labels = {
 		artisanTool: "artisan tool",
 		gamingSet: "gaming set",
+		kit: "kit",
 		level1spell: "spell"
 	};
 	return labels[tag] || (abbreviate ? DRAFT_ABBREVIATIONS[tag] : null) || tag;
@@ -501,7 +503,7 @@ function tagLabel(tag, abbreviate = false) {
 
 function regionLabel(tags, count = 2, {abbreviate = false} = {}) {
 	let type = regionType(tags);
-	let typeTags = ["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "cantrip", "level1spell"];
+	let typeTags = ["skill", "proficiency", "tool", "instrument", "artisanTool", "gamingSet", "kit", "cantrip", "level1spell"];
 	let descriptors = tags.filter(tag => !typeTags.includes(tag)).map(tag => tagLabel(tag, abbreviate)).sort();
 	let typeLabel = regionTypeLabel(type, descriptors.length, count);
 	let prefix = descriptors.length ? `${descriptors.join("/")} ` : "";
@@ -509,7 +511,7 @@ function regionLabel(tags, count = 2, {abbreviate = false} = {}) {
 }
 
 function regionType(tags) {
-	return ["skill", "instrument", "artisanTool", "gamingSet", "tool", "cantrip", "level1spell", "proficiency"]
+	return ["skill", "instrument", "artisanTool", "gamingSet", "kit", "tool", "cantrip", "level1spell", "proficiency"]
 		.find(type => tags.includes(type));
 }
 
