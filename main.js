@@ -318,7 +318,7 @@ function renderChoiceMathBlocks(merged, branchIndex) {
 				${group.combinations.length > 1 ? `<li class="mathSumRow">
 					<span>Group Sum</span>
 					<span class="formulaSpacer"></span>
-					<strong class="formulaProduct groupSumProduct">${formatNumber(group.sum)}</strong>
+					${formulaProductHTML(group.sum, {className: "groupSumProduct", prefix: ""})}
 				</li>` : ""}
 			</ul>
 		</div>
@@ -352,9 +352,17 @@ function renderCombinationRow(combination, expandId = null) {
 		<li${expandId ? ` class="mathHiddenRow ${escapeHtml(expandId)}"` : ""}>
 			<span class="mathTermLabel">${parts.map(part => `<span>${escapeHtml(partLabel(part))}</span>`).join("")}</span>
 			<code class="stackedFormula">${parts.map((part, index) => `<span>${escapeHtml(formatTerm(part, index < parts.length - 1))}</span>`).join("")}</code>
-			<strong class="formulaProduct">= ${formatNumber(combination.product)}</strong>
+			${formulaProductHTML(combination.product)}
 		</li>
 	`;
+}
+
+function formulaProductHTML(value, options = {}) {
+	let formatted = formatNumber(value);
+	let compactClass = formatted.length >= 13 ? " formulaProductCompact" : "";
+	let className = options.className ? ` ${options.className}` : "";
+	let prefix = options.prefix === undefined ? "= " : options.prefix;
+	return `<strong class="formulaProduct${className}${compactClass}">${escapeHtml(prefix + formatted)}</strong>`;
 }
 
 function wireMathExpanders() {
