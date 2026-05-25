@@ -57,8 +57,52 @@ tr:nth-child(even) {
 
 .totalBox {
 	margin-top: 20px;
-	font-size: 20px;
+	overflow-x: auto;
+}
+
+.globalTotalsTable {
+	background: #2b2b2b;
+	border-collapse: collapse;
+	margin-top: 0;
+	table-layout: auto;
+	width: auto;
+}
+
+.globalTotalsTable th,
+.globalTotalsTable td {
+	border: 1px solid #555;
+	padding: 6px 10px;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.globalTotalsTable th {
+	color: #7cc7ff;
+	font-size: 12px;
+	text-transform: uppercase;
+}
+
+.globalTotalsTable .globalTotalLabel {
+	color: white;
 	font-weight: bold;
+	text-align: left;
+}
+
+.globalTotalsTable .operatorCell {
+	color: #ffd08a;
+	text-align: center;
+	width: 22px;
+}
+
+.globalTotalsTable .globalGrandTotal {
+	text-align: left;
+}
+
+.allElapsedLine {
+	color: #d7d7d7;
+	font-size: 13px;
+	font-weight: bold;
+	margin-top: 6px;
 }
 
 .skillProf {
@@ -148,9 +192,11 @@ tr:nth-child(even) {
 }
 
 .sourceCell {
+	border: 1px solid #555;
 	font-size: 13px;
 	line-height: 1.35;
 	min-width: 150px;
+	padding: 10px;
 }
 
 .cellLabel {
@@ -311,10 +357,18 @@ tr:nth-child(even) {
 }
 
 .mathSumRow {
-	border-top-color: #666;
+	background: #303030;
+	border-top: 2px solid #8c6330;
 	font-weight: bold;
-	margin-top: 4px;
-	padding-top: 7px;
+	margin-top: 6px;
+	padding: 7px 0;
+	text-transform: uppercase;
+}
+
+.groupSumProduct {
+	background: #4a3218;
+	border-color: #d0913b;
+	color: #ffe0a8;
 }
 
 .mathExpandRow {
@@ -373,6 +427,12 @@ tr:nth-child(even) {
 	color: #aaa;
 	text-align: center;
 	vertical-align: middle;
+}
+
+.combinedChoicesScroll {
+	max-height: 520px;
+	overflow-y: auto;
+	padding-right: 6px;
 }
 
 .branchNumberCell {

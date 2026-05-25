@@ -141,8 +141,8 @@ function renderBranchRows(branch, index, selected, collapsible = false) {
 			</td>
 			${sources.map(source => `<td class="sourceCell">${renderSourceName(source)}</td>`).join("")}
 			<td class="mathCell${collapsible ? " branchCollapsedMath" : ""}" rowspan="${rowSpan}" data-branch-rowspan="${branchId}" data-branch-math="${branchId}">
-				${collapsible ? `<span class="muted">Collapsed</span>` : renderCombinedChoices(branch.merged, index)}
-				${collapsible ? `<template>${renderCombinedChoices(branch.merged, index)}</template>` : ""}
+				${collapsible ? `<span class="muted">Collapsed</span>` : renderScrollableCombinedChoices(branch.merged, index)}
+				${collapsible ? `<template>${renderScrollableCombinedChoices(branch.merged, index)}</template>` : ""}
 			</td>
 			<td class="mathCell choiceFooter" rowspan="${rowSpan}" data-branch-rowspan="${branchId}">${formatNumber(branch.merged.weightedTotal)}</td>
 		</tr>
@@ -158,6 +158,10 @@ function renderBranchRows(branch, index, selected, collapsible = false) {
 			<td class="modifierSpacer"></td>
 		</tr>
 	`;
+}
+
+function renderScrollableCombinedChoices(merged, index) {
+	return `<div class="combinedChoicesScroll">${renderCombinedChoices(merged, index)}</div>`;
 }
 
 function renderBranchSumRow(branches) {
@@ -178,8 +182,39 @@ function renderGlobalTotals(branches) {
 	let rolledWeight = BigInt(GLOBALS.rolledAbilityScoreWeight);
 
 	return `
-		<div>Point Buy Total: ${formatNumber(branchTotal)} × ${formatNumber(languageWeight)} × ${formatNumber(pointBuyWeight)} = ${formatNumber(branchTotal * languageWeight * pointBuyWeight)}</div>
-		<div>Rolled Ability Total: ${formatNumber(branchTotal)} × ${formatNumber(languageWeight)} × ${formatNumber(rolledWeight)} = ${formatNumber(branchTotal * languageWeight * rolledWeight)}</div>
+		<table class="globalTotalsTable">
+			<thead>
+				<tr>
+					<th></th>
+					<th>Weight</th>
+					<th></th>
+					<th>Languages</th>
+					<th></th>
+					<th>Ability Scores</th>
+					<th></th>
+					<th>Total</th>
+				</tr>
+			</thead>
+			<tbody>
+				${renderGlobalTotalRow("Point Buy", branchTotal, languageWeight, pointBuyWeight)}
+				${renderGlobalTotalRow("Rolled Ability", branchTotal, languageWeight, rolledWeight)}
+			</tbody>
+		</table>
+	`;
+}
+
+function renderGlobalTotalRow(label, branchTotal, languageWeight, abilityWeight) {
+	return `
+		<tr>
+			<td class="globalTotalLabel">${label}</td>
+			<td>${formatNumber(branchTotal)}</td>
+			<td class="operatorCell">×</td>
+			<td>${formatNumber(languageWeight)}</td>
+			<td class="operatorCell">×</td>
+			<td>${formatNumber(abilityWeight)}</td>
+			<td class="operatorCell">=</td>
+			<td class="globalGrandTotal">${formatNumber(branchTotal * languageWeight * abilityWeight)}</td>
+		</tr>
 	`;
 }
 
@@ -283,7 +318,7 @@ function renderChoiceMathBlocks(merged, branchIndex) {
 				${group.combinations.length > 1 ? `<li class="mathSumRow">
 					<span>Group Sum</span>
 					<span class="formulaSpacer"></span>
-					<strong class="formulaProduct">${formatNumber(group.sum)}</strong>
+					<strong class="formulaProduct groupSumProduct">${formatNumber(group.sum)}</strong>
 				</li>` : ""}
 			</ul>
 		</div>
@@ -317,7 +352,7 @@ function renderCombinationRow(combination, expandId = null) {
 		<li${expandId ? ` class="mathHiddenRow ${escapeHtml(expandId)}"` : ""}>
 			<span class="mathTermLabel">${parts.map(part => `<span>${escapeHtml(partLabel(part))}</span>`).join("")}</span>
 			<code class="stackedFormula">${parts.map((part, index) => `<span>${escapeHtml(formatTerm(part, index < parts.length - 1))}</span>`).join("")}</code>
-			<strong class="formulaProduct">${formatNumber(combination.product)}</strong>
+			<strong class="formulaProduct">= ${formatNumber(combination.product)}</strong>
 		</li>
 	`;
 }
@@ -375,7 +410,7 @@ function choiceGroupMeta(group) {
 function choiceGroupTitle(group) {
 	let kinds = new Set(group.choices.map(choiceMathKind));
 	if (kinds.has("cantrip")) return "Cantrip Math";
-	if (kinds.has("level1spell")) return "Level 1 Spell Math";
+	if (kinds.has("level1spell")) return "L1 Spell Math";
 	if (kinds.has("proficiency")) return "Proficiency Math";
 	if (kinds.has("skill")) return "Skill Math";
 	if (kinds.size === 1 && kinds.has("instrument")) return "Instrument Math";
@@ -449,7 +484,7 @@ function tagLabel(tag, abbreviate = true) {
 	let labels = {
 		artisanTool: "artisan tool",
 		gamingSet: "gaming set",
-		level1spell: "level 1 spell"
+		level1spell: "L1 spell"
 	};
 	return labels[tag] || (abbreviate ? DRAFT_ABBREVIATIONS[tag] : null) || tag;
 }

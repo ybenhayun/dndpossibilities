@@ -115,22 +115,41 @@ function allTotalHTML(branchRows, baseTotal, elapsedMs, cached = false) {
 	let globalLanguage = typeof GLOBAL_LANGUAGE_WEIGHT !== "undefined" ? GLOBAL_LANGUAGE_WEIGHT : BigInt(globalLanguageWeight());
 	let pointBuy = BigInt(GLOBALS.pointBuyWeight);
 	let rolledAbilityScores = BigInt(GLOBALS.rolledAbilityScoreWeight);
-	let pointBuyTotal = baseTotal * globalLanguage * pointBuy;
-	let rolledTotal = baseTotal * globalLanguage * rolledAbilityScores;
 	return `
-		<div>
-			<b>BRANCH ROWS:</b> ${allFormat(branchRows)}<br>
-			<b>BASE WEIGHT:</b> ${allFormat(baseTotal)}<br>
-			<b>POINT-BUY TOTAL:</b> ${allFormat(baseTotal)}
-			&times; ${allFormat(globalLanguage)}
-			&times; ${allFormat(pointBuy)}
-			= ${allFormat(pointBuyTotal)}<br>
-			<b>ROLLED-SCORE TOTAL:</b> ${allFormat(baseTotal)}
-			&times; ${allFormat(globalLanguage)}
-			&times; ${allFormat(rolledAbilityScores)}
-			= ${allFormat(rolledTotal)}<br>
-			<b>TIME:</b> ${allElapsed(elapsedMs)}${cached ? " (cached)" : ""}
-		</div>
+		<table class="globalTotalsTable">
+			<thead>
+				<tr>
+					<th></th>
+					<th>Weight</th>
+					<th></th>
+					<th>Languages</th>
+					<th></th>
+					<th>Ability Scores</th>
+					<th></th>
+					<th>Total</th>
+				</tr>
+			</thead>
+			<tbody>
+				${allGlobalTotalRow("Point Buy", baseTotal, globalLanguage, pointBuy)}
+				${allGlobalTotalRow("Rolled Ability", baseTotal, globalLanguage, rolledAbilityScores)}
+			</tbody>
+		</table>
+		<div class="allElapsedLine">Time: ${allElapsed(elapsedMs)}${cached ? " (cached)" : ""}</div>
+	`;
+}
+
+function allGlobalTotalRow(label, baseTotal, languageWeight, abilityWeight) {
+	return `
+		<tr>
+			<td class="globalTotalLabel">${allEscape(label)}</td>
+			<td>${allFormat(baseTotal)}</td>
+			<td class="operatorCell">&times;</td>
+			<td>${allFormat(languageWeight)}</td>
+			<td class="operatorCell">&times;</td>
+			<td>${allFormat(abilityWeight)}</td>
+			<td class="operatorCell">=</td>
+			<td class="globalGrandTotal">${allFormat(baseTotal * languageWeight * abilityWeight)}</td>
+		</tr>
 	`;
 }
 
