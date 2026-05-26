@@ -30,6 +30,10 @@ h1 {
 	text-align: center;
 }
 
+.controlGroup {
+	display: inline-block;
+}
+
 .buttonRow {
 	text-align: center;
 }
@@ -59,6 +63,22 @@ table {
 }
 
 #results > table {
+	display: inline-table;
+	margin-left: auto;
+	margin-right: auto;
+	width: auto;
+	text-align: left;
+}
+
+.desktopResults {
+	display: block;
+}
+
+.mobileResults {
+	display: none;
+}
+
+.desktopResults > table {
 	display: inline-table;
 	margin-left: auto;
 	margin-right: auto;
@@ -538,4 +558,193 @@ tr:nth-child(even) {
 	background: #202020;
 	border-top: 4px solid #777;
 	font-weight: bold;
+}
+
+@media (max-width: 760px) {
+	body {
+		align-items: stretch;
+		padding: 12px;
+	}
+
+	h1,
+	.controlsRow,
+	.buttonRow,
+	.totalBox,
+	#results {
+		max-width: 100%;
+	}
+
+	h1 {
+		font-size: 24px;
+	}
+
+	.controlsRow,
+	.buttonRow {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.buttonRow {
+		margin-top: 14px;
+	}
+
+	.controlGroup {
+		align-items: center;
+		display: grid;
+		gap: 10px;
+		grid-template-columns: 96px minmax(0, 1fr);
+	}
+
+	.controlGroup label {
+		font-size: 16px;
+		font-weight: bold;
+		margin: 0;
+		text-align: right;
+	}
+
+	select,
+	button {
+		box-sizing: border-box;
+		font-size: 16px;
+		margin: 0;
+		min-height: 34px;
+		width: 100%;
+	}
+
+	option {
+		font-size: 16px;
+	}
+
+	.totalBox {
+		margin-top: 14px;
+	}
+
+	.globalTotalsTable {
+		font-size: 12px;
+	}
+
+	.globalTotalsTable th,
+	.globalTotalsTable td {
+		padding: 5px 7px;
+	}
+
+	#results {
+		overflow-x: visible;
+		text-align: left;
+	}
+
+	.desktopResults {
+		display: none;
+	}
+
+	.mobileResults {
+		display: block;
+		margin-top: 16px;
+	}
+
+	.mobileBranch {
+		background: #2a2a2a;
+		border: 1px solid #555;
+		border-radius: 6px;
+		margin-bottom: 14px;
+		overflow: hidden;
+	}
+
+	.mobileBranchHeader,
+	.mobileBranchTotal {
+		align-items: center;
+		background: #444;
+		display: flex;
+		gap: 12px;
+		justify-content: space-between;
+		padding: 10px;
+	}
+
+	.mobileBranchToggle {
+		background: transparent;
+		border: 0;
+		color: #ffd08a;
+		cursor: pointer;
+		display: inline-block;
+		font-size: 18px;
+		font-weight: bold;
+		margin: 0 0 0 8px;
+		min-height: 0;
+		padding: 0;
+		width: auto;
+	}
+
+	.mobileBranchCollapsed {
+		display: none;
+	}
+
+	.mobileSourceSections.mobileBranchCollapsed {
+		display: none;
+	}
+
+	.mobileBranchHeader .choiceFooter,
+	.mobileBranchTotal .choiceFooter {
+		text-align: right;
+		white-space: normal;
+	}
+
+	.mobileSourceGrid {
+		display: grid;
+		grid-template-columns: 1fr;
+	}
+
+	.mobileSourceCard {
+		border-top: 1px solid #555;
+	}
+
+	.mobileSourceName {
+		background: #303030;
+		padding: 10px;
+	}
+
+	.mobileSourceSections {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.mobileSourceSection {
+		border-left: 1px solid #454545;
+		border-top: 1px solid #454545;
+		font-size: 11px;
+		line-height: 1.25;
+		min-width: 0;
+		padding: 7px 6px;
+	}
+
+	.mobileSourceSection:first-child {
+		border-left: 0;
+	}
+
+	.mobileSourceSection .cellLabel {
+		font-size: 10px;
+	}
+
+	.mobileSourceSection .muted {
+		font-size: 11px;
+	}
+
+	.mobileSourceSection .sourceLineList {
+		overflow-wrap: anywhere;
+	}
+
+	.mobileModifierStrip {
+		background: #202020;
+		border-top: 1px solid #555;
+		color: #d7d7d7;
+		font-size: 12px;
+		font-weight: bold;
+		line-height: 1.3;
+		padding: 9px 10px;
+	}
+
+	.mobileMath {
+		border-top: 1px solid #555;
+		padding: 10px;
+	}
 }

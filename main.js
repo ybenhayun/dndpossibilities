@@ -48,56 +48,59 @@ function generateSelected() {
 
 function ensureDraftTable() {
 	let results = document.getElementById("results");
-	if (document.getElementById("resultsBody")) return;
+	if (document.getElementById("resultsBody") && document.getElementById("mobileResults")) return;
 	results.innerHTML = draftTableHTML();
 }
 
 function draftTableHTML() {
 	return `
-		<table>
-			${tableColumnGroupHTML()}
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>Background</th>
-					<th>Race</th>
-					<th>Class</th>
-					<th>Combined Choices</th>
-					<th>Weight</th>
-				</tr>
-			</thead>
-			<tbody id="resultsBody">
-				<tr class="sourceNameRow">
-					<td rowspan="4"></td>
-					<td class="sourceCell"></td>
-					<td class="sourceCell"></td>
-					<td class="sourceCell"></td>
-					<td class="mathCell" rowspan="4"><span class="cellLabel">Remaining Requirements</span><span class="muted">None</span></td>
-					<td class="mathCell choiceFooter" rowspan="4">1</td>
-				</tr>
-				<tr class="sourceSectionRow">
-					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
-				</tr>
-				<tr class="sourceSectionRow">
-					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
-				</tr>
-				<tr class="sourceSectionRow">
-					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
-				</tr>
-				<tr class="modifierRow">
-					<td class="modifierSpacer"></td>
-					<td colspan="3"><span class="muted">None</span><div>Branch Total: 1 = 1</div></td>
-					<td class="modifierSpacer"></td>
-					<td class="modifierSpacer"></td>
-				</tr>
-			</tbody>
-		</table>
+		<div class="desktopResults">
+			<table>
+				${tableColumnGroupHTML()}
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Background</th>
+						<th>Race</th>
+						<th>Class</th>
+						<th>Combined Choices</th>
+						<th>Weight</th>
+					</tr>
+				</thead>
+				<tbody id="resultsBody">
+					<tr class="sourceNameRow">
+						<td rowspan="4"></td>
+						<td class="sourceCell"></td>
+						<td class="sourceCell"></td>
+						<td class="sourceCell"></td>
+						<td class="mathCell" rowspan="4"><span class="cellLabel">Remaining Requirements</span><span class="muted">None</span></td>
+						<td class="mathCell choiceFooter" rowspan="4">1</td>
+					</tr>
+					<tr class="sourceSectionRow">
+						<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+					</tr>
+					<tr class="sourceSectionRow">
+						<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+					</tr>
+					<tr class="sourceSectionRow">
+						<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+					</tr>
+					<tr class="modifierRow">
+						<td class="modifierSpacer"></td>
+						<td colspan="3"><span class="muted">None</span><div>Branch Total: 1 = 1</div></td>
+						<td class="modifierSpacer"></td>
+						<td class="modifierSpacer"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="mobileResults" id="mobileResults"></div>
 	`;
 }
 
@@ -116,12 +119,15 @@ function tableColumnGroupHTML() {
 
 function renderSourceRows(branches) {
 	let body = document.getElementById("resultsBody");
+	let mobile = document.getElementById("mobileResults");
 	let selected = selectDropdowns();
 	let collapsible = branches.length > 1;
 	document.getElementById("totalBox").innerHTML = renderGlobalTotals(branches);
 	body.innerHTML = branches.map((branch, index) => renderBranchRows(branch, index, selected, collapsible)).join("") + renderBranchSumRow(branches);
+	mobile.innerHTML = renderMobileBranches(branches, selected, collapsible);
 	wireMathExpanders();
 	wireBranchExpanders();
+	wireMobileBranchExpanders();
 }
 
 function renderBranchRows(branch, index, selected, collapsible = false) {
@@ -172,6 +178,68 @@ function renderBranchSumRow(branches) {
 			<td colspan="5">All Branches Total</td>
 			<td class="choiceFooter">${formatNumber(total)}</td>
 		</tr>
+	`;
+}
+
+function renderMobileBranches(branches, selected, collapsible = false) {
+	let rows = branches.map((branch, index) => renderMobileBranch(branch, index, selected, collapsible)).join("");
+	return `${rows}${renderMobileBranchSum(branches)}`;
+}
+
+function renderMobileBranch(branch, index, selected, collapsible = false) {
+	let sources = [
+		{label: selected.background, data: branch.background},
+		{label: selected.race, data: branch.race},
+		{label: selected.class, data: branch.class}
+	];
+	let branchId = `mobile-branch-${index}`;
+
+	return `
+		<section class="mobileBranch">
+			<div class="mobileBranchHeader">
+				<div>
+					<strong>Branch ${index + 1}</strong>
+					${collapsible ? `<button class="mobileBranchToggle" data-target="${branchId}" aria-expanded="false">▾</button>` : ""}
+				</div>
+				<span class="choiceFooter">${formatNumber(branch.merged.weightedTotal)}</span>
+			</div>
+			<div class="mobileSourceGrid">
+				${sources.map(source => renderMobileSource(source, branchId, collapsible)).join("")}
+			</div>
+			<div class="mobileBranchDetails${collapsible ? " mobileBranchCollapsed" : ""}" data-mobile-branch="${branchId}">
+				<div class="mobileModifierStrip">
+					${renderModifierStrip(branch.merged.modifiers)}
+					${renderBranchWeightStrip(branch.merged)}
+				</div>
+				<div class="mobileMath">
+					${renderCombinedChoices(branch.merged, `mobile-${index}`)}
+				</div>
+			</div>
+		</section>
+	`;
+}
+
+function renderMobileSource(source, branchId, collapsible = false) {
+	return `
+		<div class="mobileSourceCard">
+			<div class="mobileSourceName">${renderSourceName(source)}</div>
+			<div class="mobileSourceSections${collapsible ? " mobileBranchCollapsed" : ""}" data-mobile-branch="${branchId}">
+				${["Fixed", "Choices", "Mods"].map(section => `
+					<div class="mobileSourceSection">${renderSourceSection(source.data, section)}</div>
+				`).join("")}
+			</div>
+		</div>
+	`;
+}
+
+function renderMobileBranchSum(branches) {
+	if (branches.length <= 1) return "";
+	let total = branches.reduce((sum, branch) => sum + branch.merged.weightedTotal, 0n);
+	return `
+		<div class="mobileBranch mobileBranchTotal">
+			<strong>All Branches Total</strong>
+			<span class="choiceFooter">${formatNumber(total)}</span>
+		</div>
 	`;
 }
 
@@ -369,22 +437,27 @@ function formulaProductHTML(value, options = {}) {
 
 function wireMathExpanders() {
 	for (let button of document.querySelectorAll(".mathExpandButton")) {
+		if (button.dataset.wired === "true") continue;
+		button.dataset.wired = "true";
 		button.addEventListener("click", () => {
 			let target = button.dataset.target;
 			let controlRow = button.closest("li");
+			let mathBlock = button.closest(".mathBlock");
 			let isCollapsed = button.textContent !== "hide";
-			for (let row of document.querySelectorAll(`.${target}`)) {
-				row.classList.toggle("mathHiddenRow");
+			for (let row of mathBlock.querySelectorAll(`.${target}`)) {
+				row.classList.toggle("mathHiddenRow", !isCollapsed);
 			}
 			button.textContent = isCollapsed ? "hide" : "expand all";
 			controlRow.querySelector(".mathHiddenCount").classList.toggle("mathHiddenRow", isCollapsed);
-			document.querySelector(`.${target}-ellipsis`)?.classList.toggle("mathHiddenRow");
+			mathBlock.querySelector(`.${target}-ellipsis`)?.classList.toggle("mathHiddenRow", isCollapsed);
 		});
 	}
 }
 
 function wireBranchExpanders() {
 	for (let button of document.querySelectorAll(".branchToggleButton")) {
+		if (button.dataset.wired === "true") continue;
+		button.dataset.wired = "true";
 		button.addEventListener("click", () => {
 			let target = button.dataset.target;
 			let isExpanded = button.getAttribute("aria-expanded") === "true";
@@ -405,6 +478,25 @@ function wireBranchExpanders() {
 			}
 			mathCell.insertAdjacentHTML("afterbegin", nextExpanded ? fullMath : `<span class="muted">Collapsed</span>`);
 
+			button.textContent = nextExpanded ? "▴" : "▾";
+			button.setAttribute("aria-expanded", String(nextExpanded));
+			wireMathExpanders();
+		});
+	}
+}
+
+function wireMobileBranchExpanders() {
+	for (let button of document.querySelectorAll(".mobileBranchToggle")) {
+		if (button.dataset.wired === "true") continue;
+		button.dataset.wired = "true";
+		button.addEventListener("click", () => {
+			let target = button.dataset.target;
+			let isExpanded = button.getAttribute("aria-expanded") === "true";
+			let nextExpanded = !isExpanded;
+
+			for (let section of document.querySelectorAll(`[data-mobile-branch="${target}"]`)) {
+				section.classList.toggle("mobileBranchCollapsed", !nextExpanded);
+			}
 			button.textContent = nextExpanded ? "▴" : "▾";
 			button.setAttribute("aria-expanded", String(nextExpanded));
 			wireMathExpanders();

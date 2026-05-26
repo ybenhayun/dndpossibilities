@@ -3,6 +3,7 @@
 
 <head>
 	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>D&D Character Counter</title>
 	<link rel="stylesheet" href="styles.css" />
 </head>
@@ -11,14 +12,20 @@
 	<h1>D&D Character Counter</h1>
 
 	<div class="controlsRow">
-		<label>Background</label>
-		<select id="backgroundSelect"></select>
+		<div class="controlGroup">
+			<label>Background</label>
+			<select id="backgroundSelect"></select>
+		</div>
 
-		<label>Race</label>
-		<select id="raceSelect"></select>
+		<div class="controlGroup">
+			<label>Race</label>
+			<select id="raceSelect"></select>
+		</div>
 
-		<label>Class</label>
-		<select id="classSelect"></select>
+		<div class="controlGroup">
+			<label>Class</label>
+			<select id="classSelect"></select>
+		</div>
 	</div>
 
 	<div class="buttonRow">
@@ -28,57 +35,60 @@
 
 	<div class="totalBox" id="totalBox"></div>
 	<div id="results">
-		<table>
-			<colgroup>
-				<col class="branchNumberColumn">
-				<col class="sourceColumn">
-				<col class="sourceColumn">
-				<col class="sourceColumn">
-				<col class="combinedColumn">
-				<col class="weightColumn">
-			</colgroup>
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>Background</th>
-					<th>Race</th>
-					<th>Class</th>
-					<th>Combined Choices</th>
-					<th>Weight</th>
-				</tr>
-			</thead>
-			<tbody id="resultsBody">
-				<tr class="sourceNameRow">
-					<td rowspan="4"></td>
-					<td class="sourceCell"></td>
-					<td class="sourceCell"></td>
-					<td class="sourceCell"></td>
-					<td class="mathCell" rowspan="4"><span class="cellLabel">Remaining Requirements</span><span class="muted">None</span></td>
-					<td class="mathCell choiceFooter" rowspan="4">1</td>
-				</tr>
-				<tr class="sourceSectionRow">
-					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
-				</tr>
-				<tr class="sourceSectionRow">
-					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
-				</tr>
-				<tr class="sourceSectionRow">
-					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
-					<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
-				</tr>
-				<tr class="modifierRow">
-					<td class="modifierSpacer"></td>
-					<td colspan="3"><span class="muted">None</span><div>Branch Total: 1 = 1</div></td>
-					<td class="modifierSpacer"></td>
-					<td class="modifierSpacer"></td>
-				</tr>
-			</tbody>
-		</table>
+		<div class="desktopResults">
+			<table>
+				<colgroup>
+					<col class="branchNumberColumn">
+					<col class="sourceColumn">
+					<col class="sourceColumn">
+					<col class="sourceColumn">
+					<col class="combinedColumn">
+					<col class="weightColumn">
+				</colgroup>
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Background</th>
+						<th>Race</th>
+						<th>Class</th>
+						<th>Combined Choices</th>
+						<th>Weight</th>
+					</tr>
+				</thead>
+				<tbody id="resultsBody">
+					<tr class="sourceNameRow">
+						<td rowspan="4"></td>
+						<td class="sourceCell"></td>
+						<td class="sourceCell"></td>
+						<td class="sourceCell"></td>
+						<td class="mathCell" rowspan="4"><span class="cellLabel">Remaining Requirements</span><span class="muted">None</span></td>
+						<td class="mathCell choiceFooter" rowspan="4">1</td>
+					</tr>
+					<tr class="sourceSectionRow">
+						<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Fixed</span><span class="muted">None</span></td>
+					</tr>
+					<tr class="sourceSectionRow">
+						<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Choices</span><span class="muted">None</span></td>
+					</tr>
+					<tr class="sourceSectionRow">
+						<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+						<td class="sourceCell"><span class="cellLabel">Mods</span><span class="muted">None</span></td>
+					</tr>
+					<tr class="modifierRow">
+						<td class="modifierSpacer"></td>
+						<td colspan="3"><span class="muted">None</span><div>Branch Total: 1 = 1</div></td>
+						<td class="modifierSpacer"></td>
+						<td class="modifierSpacer"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="mobileResults" id="mobileResults"></div>
 	</div>
 
 	<script src="skills.js"></script>
